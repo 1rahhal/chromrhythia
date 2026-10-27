@@ -1,7 +1,8 @@
 // Gameplay defaults and formulas derived from Rhythia/Client (AGPL-3.0).
 // Source revision: 9200e16441c94f0cffca8ee10beb4e889235c56a.
-export const DEFAULTS = Object.freeze({approachRate:30,spawnDistance:15,fadeIn:10,fadeOut:75,fov:70,sensitivity:0.5,volume:50,musicVolume:50,offset:0,renderScale:1,background:'grid' as string,resolutionMode:'auto' as string,frameLimit:0 as number,touchMode:'direct' as string,colors:['#ff0059','#ffd8e6']});
-export type Settings = typeof DEFAULTS;
+import {DEFAULTS,sanitizeSettings,type Settings} from '../shared/settings.mjs';
+export {DEFAULTS,sanitizeSettings};
+export type {Settings};
 export interface Note {time:number;x:number;y:number;index:number}
 export interface Chart {id:string;title:string;artist:string;mappers:string[];difficulty:number;difficultyName?:string;notes:Note[];length:number;audio?:Uint8Array;cover?:Uint8Array;favorite?:boolean;demo?:boolean;remote?:boolean;downloaded?:boolean;size?:number;count?:number;fileName?:string;hasCover?:boolean}
 export type Mod = 'NoFail'|'Autoplay'|'Ghost'|'Strobe'|'HFlip'|'VFlip'|'Earthquake'|'Chaos'|'Vortex';
@@ -37,15 +38,4 @@ export class Attempt {
     }else{this.misses++;this.combo=0;this.multiplierProgress=0;this.multiplier=Math.max(1,this.multiplier-1);this.health=Math.max(0,this.health-this.healthStep);this.healthStep=Math.min(this.healthStep*1.2,100)}
     if(this.health<=0)this.alive=false;
   }
-}
-export function sanitizeSettings(value:Partial<Settings>):Settings{
-  const s={...DEFAULTS,...value,colors:[...DEFAULTS.colors]};
-  const ranges:Record<string,[number,number]>={approachRate:[0.5,100],spawnDistance:[0.5,100],fadeIn:[0,100],fadeOut:[0,100],fov:[30,140],sensitivity:[0.05,3],volume:[0,100],musicVolume:[0,100],offset:[-500,500],renderScale:[0.5,2]};
-  for(const [key,[a,b]]of Object.entries(ranges)){const v=Number((value as Record<string,unknown>)[key]??(DEFAULTS as Record<string,unknown>)[key]);(s as Record<string,unknown>)[key]=Number.isFinite(v)?clamp(v,a,b):(DEFAULTS as Record<string,unknown>)[key]}
-  if(Array.isArray(value.colors)){const colors=value.colors.filter(c=>typeof c==='string'&&/^#[\da-f]{6}$/i.test(c)).slice(0,128);if(colors.length)s.colors=colors}
-  s.background=['grid','tunnel','aurora','void'].includes(value.background||'')?value.background!:'grid';
-  s.touchMode=value.touchMode==='relative'?'relative':'direct';
-  s.frameLimit=[0,60,120,144,240].includes(Number(value.frameLimit))?Number(value.frameLimit):0;
-  s.resolutionMode=value.resolutionMode==='fixed'?'fixed':'auto';
-  return s;
 }

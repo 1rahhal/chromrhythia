@@ -34,3 +34,27 @@ test('deployments revalidate mutable asset URLs and cache fingerprinted files sa
  for(const path of ['style.css','index.html','source.zip','sw.js']){const r=await site.fetch(request('/'+path),{},{});assert.equal(r.headers.get('cache-control'),'no-cache')}
  for(const path of ['style.123abc.css','game.123abc.bin']){const r=await site.fetch(request('/'+path),{},{});assert.match(r.headers.get('cache-control'),/immutable/)}
 });
+
+const publisher='a'.repeat(64),otherPublisher='b'.repeat(64),presetId='11111111-1111-4111-8111-111111111111';
+const presetRequest=(path,method='GET',value,owner=publisher)=>request(path,{method,headers:{authorization:'Bearer '+token,...(method==='GET'?{}:{'content-type':'application/json','x-preset-key':owner,origin:'https://game.test'})},...(value?{body:JSON.stringify(value)}:{})});
+test('shared presets require game access, strip private fields, and keep every client independent',async()=>{
+ assert.equal((await api(request('/api/presets'),env)).status,401);
+ const r=await api(presetRequest('/api/presets','POST',{id:presetId,name:'My cursor',author:'Player',settings:{parallax:0,cursorShape:'circle',cursorFill:true,cursorTrail:true,publisherKey:'do-not-share',authToken:'secret',colors:['#123456']}}),env);assert.equal(r.status,201);const {preset}=await r.json();assert.equal(preset.settings.parallax,0);assert.equal(preset.settings.cursorFill,true);assert.equal(preset.ownerHash,undefined);assert.equal(preset.settings.publisherKey,undefined);assert.equal(preset.settings.authToken,undefined);
+ const list=await (await api(presetRequest('/api/presets'),env)).json();assert.equal(list.presets.length,1);assert.equal(list.presets[0].settings.cursorShape,'circle');assert.equal(JSON.stringify(list).includes(publisher),false);assert.equal(JSON.stringify(list).includes('ownerHash'),false);
+ // Another client copies to a new profile; its edits cannot change the original.
+ const copy=await api(presetRequest('/api/presets','POST',{name:'My independent copy',settings:{...preset.settings,parallax:50}},otherPublisher),env);assert.equal(copy.status,201);const listed=await (await api(presetRequest('/api/presets'),env)).json();assert.equal(listed.presets.find(p=>p.id===presetId).settings.parallax,0);
+});
+test('only a preset publisher can update it, and creation retries are idempotent',async()=>{
+ const update={id:presetId,name:'Updated',settings:{cursorShape:'square',cursorFill:true}};
+ assert.equal((await api(presetRequest('/api/presets/'+presetId,'PUT',update,otherPublisher),env)).status,403);
+ assert.equal((await api(presetRequest('/api/presets','POST',update,otherPublisher),env)).status,403);
+ assert.equal((await api(presetRequest('/api/presets/'+presetId,'PUT',update),env)).status,200);
+ assert.equal((await api(presetRequest('/api/presets','POST',update),env)).status,200);
+ const list=await (await api(presetRequest('/api/presets'),env)).json();assert.equal(list.presets.length,2);assert.equal(list.presets.find(p=>p.id===presetId).name,'Updated');assert.equal(list.presets.find(p=>p.id===presetId).settings.cursorShape,'square');
+});
+test('preset uploads reject malformed, oversized and cross-origin writes',async()=>{
+ assert.equal((await api(presetRequest('/api/presets','POST',{name:'',settings:{}}),env)).status,400);
+ assert.equal((await api(presetRequest('/api/presets','POST',{name:'Large',settings:{extra:'x'.repeat(20000)}}),env)).status,413);
+ assert.equal((await api(request('/api/presets',{method:'POST',headers:{authorization:'Bearer '+token,'x-preset-key':publisher,origin:'https://other.test'},body:'{}'}),env)).status,403);
+ assert.equal((await api(presetRequest('/api/presets/nope','PUT',{name:'x',settings:{}}),env)).status,404);
+});

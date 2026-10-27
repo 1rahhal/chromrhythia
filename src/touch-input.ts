@@ -5,8 +5,8 @@ export function gameViewport(width:number,height:number,fov:number){
   const fit=2*Math.atan(1.85/(CAMERA_Z*Math.max(.1,aspect)))*180/Math.PI;
   return {compact,fov:compact?Math.min(140,Math.max(fov,fit)):fov};
 }
-export function screenAim(x:number,y:number,rect:{left:number;top:number;width:number;height:number},fov:number){
-  const h=Math.max(1,rect.height),w=Math.max(1,rect.width),vertical=CAMERA_Z*Math.tan(fov*Math.PI/360)/(1-CAMERA_PARALLAX);
+export function screenAim(x:number,y:number,rect:{left:number;top:number;width:number;height:number},fov:number,parallax=CAMERA_PARALLAX){
+  const h=Math.max(1,rect.height),w=Math.max(1,rect.width),vertical=CAMERA_Z*Math.tan(fov*Math.PI/360)/(1-parallax);
   return {x:clamp(((x-rect.left)/w*2-1)*vertical*w/h,-CURSOR_BOUND,CURSOR_BOUND),y:clamp((1-(y-rect.top)/h*2)*vertical,-CURSOR_BOUND,CURSOR_BOUND)};
 }
 export const prefersTouch=(lastType:string|undefined,coarse:boolean)=>lastType?lastType==='touch'||lastType==='pen':coarse;

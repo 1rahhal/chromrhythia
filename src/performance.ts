@@ -1,5 +1,9 @@
 // Resolution changes affect pixels only. Judgment and the audio clock stay independent.
 export const AUTO_PIXEL_BUDGET=1600*900;
+export class BrowserCadence {
+  hz=0;private last=0;private samples:number[]=[];
+  sample(now:number){const delta=now-this.last;this.last=now;if(delta<2||delta>250){this.samples=[];return}this.samples.push(delta);if(this.samples.length<60)return;const sorted=this.samples.sort((a,b)=>a-b);this.hz=Math.round(1000/((sorted[29]+sorted[30])/2));this.samples=[]}
+}
 export function renderRatio(width:number,height:number,dpr:number,scale:number,mode:string,factor=1){
   if(mode==='fixed')return Math.min(dpr,2)*scale;
   return Math.min(1,dpr,Math.sqrt(AUTO_PIXEL_BUDGET/Math.max(1,width*height)))*Math.min(1,scale)*factor;

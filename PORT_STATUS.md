@@ -8,8 +8,10 @@ This is a playable first browser implementation, **not a completed full-game por
 | --- | --- |
 | Default approach rate/distance, 55 ms hit window and hit box | Ported from SettingsProfile.cs, Constants.cs and Note.cs |
 | Score, combo multipliers, accuracy and adaptive health | Ported from active Runner.cs / Attempt.cs logic |
-| Approach, spawn distance, fade in/out, FOV | Implemented, saved locally |
+| Approach, spawn distance, fade in/out, FOV, camera parallax | Implemented, saved locally |
 | Color picker list with + and removal | Implemented, saved locally |
+| Cursor shape, fill, size, color, opacity and trail | Browser customization; hit box unchanged, 64-point instanced trail |
+| Local and community settings presets | Device-local snapshots and independent application; explicit cloud publishing through the shared password-protected library |
 | Note opacity exponent, size, cursor bounds and drift | Rewrite defaults |
 | Keyboard/mouse, touch/stylus, capture, fullscreen, pause, retry, focus pause | Browser implementation; direct or relative touch aim, responsive phone/tablet menus and compact HUD |
 | Audio clock, speed, local offset, break skip | Browser implementation |
