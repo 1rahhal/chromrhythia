@@ -11,7 +11,7 @@ This is a playable first browser implementation, **not a completed full-game por
 | Approach, spawn distance, fade in/out, FOV | Implemented, saved locally |
 | Color picker list with + and removal | Implemented, saved locally |
 | Note opacity exponent, size, cursor bounds and drift | Rewrite defaults |
-| Keyboard/mouse, capture, fullscreen, pause, retry, focus pause | Browser implementation |
+| Keyboard/mouse, touch/stylus, capture, fullscreen, pause, retry, focus pause | Browser implementation; direct or relative touch aim, responsive phone/tablet menus and compact HUD |
 | Audio clock, speed, local offset, break skip | Browser implementation |
 | PHXM standard static-note maps / PHXMO | Import and export |
 | SSPM v1 / v2 standard notes | Import; extensions and non-note markers rejected |

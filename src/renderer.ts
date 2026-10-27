@@ -2,15 +2,16 @@ import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 import {NativeHUD} from './native-hud';
+import {gameViewport,CAMERA_Z,CAMERA_PARALLAX} from './touch-input';
 import {AdaptiveResolution,renderRatio} from './performance';
 import {Attempt,approachTime,clamp,noteVisual,type Settings} from './model';
 export class Renderer {
   gl:T.WebGLRenderer;scene=new T.Scene();camera=new T.PerspectiveCamera(70,1,0.05,160);mesh:T.InstancedMesh;opacity:T.InstancedBufferAttribute;
-  dummy=new T.Object3D();color=new T.Color();cursor:T.Mesh;grid:T.LineSegments;tunnel=new T.Group();capacity=8192;w=1;h=1;fps=0;
+  dummy=new T.Object3D();color=new T.Color();cursor:T.Mesh;grid:T.LineSegments;tunnel=new T.Group();capacity=8192;w=1;h=1;fps=0;compact=false;
   ready:Promise<unknown>;hud=new NativeHUD();private lastFPS=performance.now();private frames=0;private environment=new T.Group();private spaceMaterial:T.ShaderMaterial;private hitColor=new T.Color('#ffd8e6');private lastTime=0;private backgroundName='';private aurora=new T.Group();private auroraMaterial:T.ShaderMaterial;private renderScale=1;private warmup?:Promise<void>;private qualityMode='auto';private adaptive=new AdaptiveResolution();private lastFrameAt=0;
   constructor(public canvas:HTMLCanvasElement){
     this.gl=new T.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});this.gl.setClearColor(0x080810);this.gl.outputColorSpace=T.SRGBColorSpace;
-    this.camera.position.z=3.75;
+    this.camera.position.z=CAMERA_Z;
     const geometry=new RoundedBoxGeometry(0.875,0.875,0.15,2,0.07);
     this.opacity=new T.InstancedBufferAttribute(new Float32Array(this.capacity),1);geometry.setAttribute('instanceOpacity',this.opacity);
     const mat=new T.MeshBasicMaterial({color:0xffffff,transparent:true,depthWrite:false});
@@ -31,11 +32,11 @@ export class Renderer {
     this.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();window.dispatchEvent(new CustomEvent('renderer-lost'))});this.canvas.addEventListener('webglcontextrestored',()=>location.reload());
   }
   begin(){this.frames=0;this.fps=0;this.lastFPS=performance.now();this.lastFrameAt=0;this.adaptive.reset()}
-  resize(scale=1,mode=this.qualityMode){this.renderScale=scale;this.qualityMode=mode;const ratio=renderRatio(innerWidth,innerHeight,devicePixelRatio,scale,mode,this.adaptive.factor);if(this.w===innerWidth&&this.h===innerHeight&&this.gl.getPixelRatio()===ratio)return;this.w=innerWidth;this.h=innerHeight;this.gl.setPixelRatio(ratio);this.gl.setSize(this.w,this.h,false);this.camera.aspect=this.w/this.h;this.camera.updateProjectionMatrix()}
+  resize(scale=1,mode=this.qualityMode){this.renderScale=scale;this.qualityMode=mode;const ratio=renderRatio(innerWidth,innerHeight,devicePixelRatio,scale,mode,this.adaptive.factor);if(this.w===innerWidth&&this.h===innerHeight&&this.gl.getPixelRatio()===ratio)return;this.w=innerWidth;this.h=innerHeight;this.compact=gameViewport(this.w,this.h,this.camera.fov).compact;document.body.classList.toggle('compact-play',this.compact);this.gl.setPixelRatio(ratio);this.gl.setSize(this.w,this.h,false);this.camera.aspect=this.w/this.h;this.camera.updateProjectionMatrix()}
   warm(settings:Settings){return this.warmup??=this.ready.then(async()=>{this.mesh.count=0;this.hud.group.visible=true;await this.gl.compileAsync(this.scene,this.camera);this.hud.group.visible=false;this.render(0,settings);})}
   render(time:number,s:Settings,attempt?:Attempt,cursor={x:0,y:0},preview=false,spin={x:0,y:0}){
     if(s.resolutionMode!==this.qualityMode||s.renderScale!==this.renderScale)this.resize(s.renderScale,s.resolutionMode);
-    if(this.camera.fov!==s.fov){this.camera.fov=s.fov;this.camera.updateProjectionMatrix()}this.camera.position.set(cursor.x*0.25,cursor.y*0.25,3.75);this.camera.rotation.set(spin.x,spin.y,0,'YXZ');
+    const viewport=gameViewport(this.w,this.h,s.fov);if(this.camera.fov!==viewport.fov){this.camera.fov=viewport.fov;this.camera.updateProjectionMatrix()}this.camera.position.set(cursor.x*CAMERA_PARALLAX,cursor.y*CAMERA_PARALLAX,CAMERA_Z);this.camera.rotation.set(spin.x,spin.y,0,'YXZ');
     this.grid.visible=false;this.cursor.visible=!!attempt;this.cursor.position.set(cursor.x,cursor.y,0.001);
     const dt=Math.min(0.1,Math.max(0,(time-this.lastTime)/1000));this.lastTime=time;if(attempt&&attempt.lastHitIndex>=0)this.hitColor.lerp(this.color.set(s.colors[attempt.lastHitIndex%s.colors.length]),Math.min(1,dt*8));this.spaceMaterial.uniforms.offset.value=time/1000*3;
     if(this.backgroundName!==s.background){this.backgroundName=s.background;this.environment.visible=s.background==='grid';this.tunnel.visible=s.background==='tunnel';this.aurora.visible=s.background==='aurora';this.gl.setClearColor(s.background==='grid'?0x0c081c:0x000000)}
@@ -58,7 +59,7 @@ export class Renderer {
       const cycle=approachTime(s)*1000;for(let i=0;i<15;i++){const pos=((time+i*247)%Math.max(1000,cycle*4))/Math.max(1000,cycle*4);const depth=s.spawnDistance*(1-pos);const visual=noteVisual(0,depth/s.approachRate*1000,s);this.instance(count++,Math.sin(i*2.3),Math.cos(i*2.3),-depth,preview?visual.opacity:0.18,s.colors[i%s.colors.length],0)}
     }
     this.mesh.count=count;if(count){this.mesh.instanceMatrix.clearUpdateRanges();this.mesh.instanceMatrix.addUpdateRange(0,count*16);this.mesh.instanceMatrix.needsUpdate=true;this.opacity.clearUpdateRanges();this.opacity.addUpdateRange(0,count);this.opacity.needsUpdate=true;if(this.mesh.instanceColor){this.mesh.instanceColor.clearUpdateRanges();this.mesh.instanceColor.addUpdateRange(0,count*3);this.mesh.instanceColor.needsUpdate=true}}
-    this.hud.update(attempt,time);this.gl.render(this.scene,this.camera);this.frames++;const now=performance.now();if(attempt&&this.lastFrameAt&&this.qualityMode==='auto'&&this.adaptive.sample(now-this.lastFrameAt))this.resize(this.renderScale);this.lastFrameAt=now;if(now-this.lastFPS>=500){this.fps=Math.round(this.frames*1000/(now-this.lastFPS));this.frames=0;this.lastFPS=now}
+    if(viewport.compact)this.hud.group.visible=false;else this.hud.update(attempt,time);this.gl.render(this.scene,this.camera);this.frames++;const now=performance.now();if(attempt&&this.lastFrameAt&&this.qualityMode==='auto'&&this.adaptive.sample(now-this.lastFrameAt))this.resize(this.renderScale);this.lastFrameAt=now;if(now-this.lastFPS>=500){this.fps=Math.round(this.frames*1000/(now-this.lastFPS));this.frames=0;this.lastFPS=now}
   }
   private instance(index:number,x:number,y:number,z:number,opacity:number,color:string,rotation:number){this.dummy.position.set(x,y,z);this.dummy.rotation.z=rotation;this.dummy.updateMatrix();this.mesh.setMatrixAt(index,this.dummy.matrix);this.mesh.setColorAt(index,this.color.set(color));this.opacity.setX(index,clamp(opacity,0,1))}
 }

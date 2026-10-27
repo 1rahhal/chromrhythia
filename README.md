@@ -17,7 +17,9 @@ Open `http://127.0.0.1:4173`. On the first build, a strong generated password is
 
 ## Controls and settings
 
-Move the mouse to aim; notes are hit automatically as they reach the 3×3 playfield. Play requests fullscreen and pointer lock. Escape or Space pauses; R restarts; Tab skips an available break. The game pauses on tab switches and loss of mouse capture.
+Move the mouse to aim; notes are hit automatically as they reach the 3×3 playfield. On phones and tablets, drag a finger or stylus across the playfield to move the cursor. Settings → Touch controls offers direct finger aiming or trackpad-style relative motion using sensitivity. Lifting and placing the finger again continues play; interrupted gestures, device rotation and tab switches pause safely.
+
+Menus adapt to portrait and landscape screens, with larger touch targets, safe-area spacing and a fixed Play button for the selected map on smaller displays. Narrow gameplay screens fit the entire note area and use a compact HUD. Fullscreen is requested where available; touch play does not require pointer lock. Mouse play keeps pointer capture. Escape or Space pauses; R restarts; Tab skips an available break. Tap the pause button to resume, retry, open settings or quit.
 
 The custom settings menu exposes approach rate, spawn distance, fade in, fade out, FOV, sensitivity, volume, audio offset and render scale. Press **+** beside the color pickers to add another color; notes cycle through the list in chart order. Profiles can be exported and imported. Other implemented mechanics retain rewrite defaults (55 ms late-only hit window, 0.07 hit-box expansion, 0.875 note size, 0.25 camera parallax, 100 health, 15 initial health step, and 1–8× score multiplier).
 
