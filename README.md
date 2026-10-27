@@ -1,6 +1,6 @@
 # Chromrhythia
 
-A browser-native port **in development** based on the **current Rhythia C# rewrite**, not the legacy Sound Space Plus client. It uses TypeScript, Three.js/WebGL, Web Audio, and IndexedDB. This build is playable but does **not** reproduce the entirety of the native game; see [PORT_STATUS.md](PORT_STATUS.md).
+A browser-native port **in development** based on the **current Rhythia C# rewrite**, not the legacy Sound Space Plus client. It uses TypeScript, Three.js/WebGL, Web Audio, and IndexedDB, with a cloud Worker/R2 shared map library. This build is playable but does **not** reproduce the entirety of the native game; see [PORT_STATUS.md](PORT_STATUS.md).
 
 Upstream: [Rhythia/Client](https://github.com/Rhythia/Client), revision `9200e16441c94f0cffca8ee10beb4e889235c56a` (0.2.0). This derivative and its corresponding source are distributed under AGPL-3.0. Original logo, font and hit/miss samples come from that source. This is an unofficial port.
 
@@ -21,19 +21,23 @@ Move the mouse to aim; notes are hit automatically as they reach the 3×3 playfi
 
 The custom settings menu exposes approach rate, spawn distance, fade in, fade out, FOV, sensitivity, volume, audio offset and render scale. Press **+** beside the color pickers to add another color; notes cycle through the list in chart order. Profiles can be exported and imported. Other implemented mechanics retain rewrite defaults (55 ms late-only hit window, 0.07 hit-box expansion, 0.875 note size, 0.25 camera parallax, 100 health, 15 initial health step, and 1–8× score multiplier).
 
-Import `.phxm`, `.sspm` v1/v2, `.rhm`, or `.txt` maps. Select the text map and its matching `.mp3`, `.ogg`, or `.wav` together. Three generated practice charts include generated tones; commercial songs are not bundled. Maps, settings, scores and replays stay on the current browser and origin, without cloud sync. Export important maps and replays before clearing site data or switching domains.
+Import `.phxm`, `.sspm` v1/v2, `.rhm`, or `.txt` maps. Select the text map and its matching `.mp3`, `.ogg`, or `.wav` together. Three generated practice charts include generated tones; commercial songs are not bundled. Uploaded maps are shared through the hosted cloud library. Selecting a map downloads it on demand and caches it for offline use. Settings, scores and replays stay on the current browser and origin. Export important maps and replays before clearing site data or switching domains.
 
-## GitHub Pages
+## Cloud hosting and GitHub Pages
 
-The included `.github/workflows/pages.yml` checks and builds the project, then deploys `dist/` using GitHub Pages. Add the repository Actions secret **GAME_PASSWORD** (12+ characters), then choose **GitHub Actions** as the source in repository Settings → Pages. CI fails if the password secret is absent. Pages runs must be authorized for this repository. Never put your password into source files or workflow YAML.
+The primary deployment is a cloud Worker with a managed R2 bucket, using `.openai/hosting.json`. `npm run build` creates the encrypted offline-capable client and the ESM Worker at `dist/server/index.js`. Configure `PASSWORD_HASH` as a hosted secret containing the SHA-256 of the chosen password; the plaintext password is not deployed. The source is on GitHub. See [SHARED_HOSTING.md](SHARED_HOSTING.md).
 
-Alternatively run `npm run build` locally and serve `dist/` over HTTPS on any static host. The Sites deployment is private to the owner by default and adds its own account sign-in; GitHub Pages uses only the game password.
+For an independent static build, serve the root client files from `dist/` on GitHub Pages. Shared uploads require the cloud Worker; a static Pages deployment alone cannot accept shared uploads. To change the password, run `npm run password`, rebuild, update the hosted hash secret and redeploy.
+
+For an optional CI rebuild, `.github/workflows/pages.yml` can check, build and deploy `dist/`. Add the repository Actions secret **GAME_PASSWORD** (12+ characters), select **GitHub Actions** as the Pages source, and run the workflow manually. CI fails if the password secret is absent. Never put your password into source files or workflow YAML.
+
+Alternatively run `npm run build` locally and serve `dist/` over HTTPS on any static host. The production cloud deployment permits visitors with the game password; the Worker API checks a hosted password hash for listing, uploads and downloads. See SHARED_HOSTING.md.
 
 ## Password protection
 
 The compiled runtime is encrypted with AES-256-GCM. Its key is derived with PBKDF2-SHA256 (600,000 iterations and a random salt). The unlock page downloads ciphertext and decrypts it in memory; a wrong password cannot decrypt the runtime. No plaintext password or reusable key is stored in the served files. A strong password matters because a downloaded encrypted bundle permits offline guessing. Lock reloads the page and discards the in-memory code/key; it does not erase the device's library.
 
-This protects access to the hosted bundle, not ownership of open-source code: the AGPL source archive is intentionally downloadable and can be rebuilt by anyone. This is not a server authentication system, rate limiter or encrypted vault for personal maps. Personal maps and scores use browser storage on that device.
+This protects access to the hosted bundle, not ownership of open-source code: the AGPL source archive is intentionally downloadable and can be rebuilt by anyone. The shared map API separately authenticates a password-derived bearer token against a server-only secret. Uploads are shared with other password holders; local scores and replays stay in browser storage. This is not an encrypted vault for private uploads.
 
 ## Validation
 
@@ -48,4 +52,3 @@ Tests cover scoring, health, default approach/fades, chart coordinate conversion
 ## Corresponding source
 
 Every build includes `source.zip`, `SOURCE.txt`, and `LICENSE`. The source archive excludes passwords, local maps, scores and replays. Source provenance and the parity checklist are in [PORT_STATUS.md](PORT_STATUS.md). `scripts/build.mjs` generates the source archive from the project and encrypts only the executable bundle.
-
