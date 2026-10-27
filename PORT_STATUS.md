@@ -24,11 +24,11 @@ This is a playable first browser implementation, **not a completed full-game por
 | Replays | Browser JSON format, recorded cursor/late hits, watch and export |
 | Native PHXR replay compatibility | Not ported |
 | Skin/mesh/UI skin imports | Not ported |
-| Current default grid environment | Original grid texture, scene dimensions, UV scroll and fog parameters ported; Godot post-processing parity unverified |
+| Current default grid environment | Original grid texture, scroll and fog; extended planes and corrected color space avoid hard edges; Godot post-processing parity unverified |
 | Default note mesh, cursor and grid textures | Original rewrite assets used |
-| Other native spaces and full original menus | Not ported; browser menu UI provided |
+| Other spaces and full original menus | Original tunnel textures plus browser Aurora/Pitch black options; custom black/purple/blue selector |
 | Animated map object tracks and video backgrounds | Not ported; animated tracks rejected, video ignored |
-| Jukebox / previews in menu | Not ported |
+| Map artwork / previews in menu | Embedded SSPM art, shared thumbnails, seekable audio and animated note preview; full native jukebox not ported |
 | Native profile and library migration | Not ported; browser profiles supported |
 | Desktop Discord, auto-updater, arbitrary user folder | Unavailable in a static browser game |
 | Shared map uploads and downloads | Managed Worker/R2, password-protected, all visitors share one library |

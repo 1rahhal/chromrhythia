@@ -1,15 +1,16 @@
 // Gameplay defaults and formulas derived from Rhythia/Client (AGPL-3.0).
 // Source revision: 9200e16441c94f0cffca8ee10beb4e889235c56a.
-export const DEFAULTS = Object.freeze({approachRate:30,spawnDistance:15,fadeIn:10,fadeOut:75,fov:70,sensitivity:0.5,volume:50,musicVolume:50,offset:0,renderScale:1,colors:['#ff0059','#ffd8e6']});
+export const DEFAULTS = Object.freeze({approachRate:30,spawnDistance:15,fadeIn:10,fadeOut:75,fov:70,sensitivity:0.5,volume:50,musicVolume:50,offset:0,renderScale:1,background:'grid' as string,colors:['#ff0059','#ffd8e6']});
 export type Settings = typeof DEFAULTS;
 export interface Note {time:number;x:number;y:number;index:number}
-export interface Chart {id:string;title:string;artist:string;mappers:string[];difficulty:number;difficultyName?:string;notes:Note[];length:number;audio?:Uint8Array;cover?:Uint8Array;favorite?:boolean;demo?:boolean;remote?:boolean;downloaded?:boolean;size?:number;count?:number;fileName?:string}
+export interface Chart {id:string;title:string;artist:string;mappers:string[];difficulty:number;difficultyName?:string;notes:Note[];length:number;audio?:Uint8Array;cover?:Uint8Array;favorite?:boolean;demo?:boolean;remote?:boolean;downloaded?:boolean;size?:number;count?:number;fileName?:string;hasCover?:boolean}
 export type Mod = 'NoFail'|'Autoplay'|'Ghost'|'Strobe'|'HFlip'|'VFlip'|'Earthquake'|'Chaos'|'Vortex';
 export const MODS:Mod[]=['NoFail','Autoplay','Ghost','Strobe','HFlip','VFlip','Earthquake','Chaos','Vortex'];
 export const MOD_MULTIPLIERS:Partial<Record<Mod,number>>={Ghost:1.03,Strobe:1.035,Earthquake:1.01,Chaos:1.015,Vortex:1.02};
 export const HIT_WINDOW=55, HIT_BOX=0.57, CURSOR_BOUND=1.36875;
 export const clamp=(n:number,a:number,b:number)=>Math.max(a,Math.min(b,n));
 export const approachTime=(s:Settings)=>s.spawnDistance/s.approachRate;
+export const notesPerMinute=(count:number,length:number,speed=1)=>length>0?Math.round(count*60000/length*speed):0;
 export function noteVisual(time:number,noteTime:number,s:Settings,speed=1,ghost=false){
   const depth=(noteTime-time)/1000*s.approachRate/speed;
   const pushback=HIT_WINDOW*s.approachRate/1000;
@@ -42,5 +43,6 @@ export function sanitizeSettings(value:Partial<Settings>):Settings{
   const ranges:Record<string,[number,number]>={approachRate:[0.5,100],spawnDistance:[0.5,100],fadeIn:[0,100],fadeOut:[0,100],fov:[30,140],sensitivity:[0.05,3],volume:[0,100],musicVolume:[0,100],offset:[-500,500],renderScale:[0.5,2]};
   for(const [key,[a,b]]of Object.entries(ranges)){const v=Number((value as Record<string,unknown>)[key]??(DEFAULTS as Record<string,unknown>)[key]);(s as Record<string,unknown>)[key]=Number.isFinite(v)?clamp(v,a,b):(DEFAULTS as Record<string,unknown>)[key]}
   if(Array.isArray(value.colors)){const colors=value.colors.filter(c=>typeof c==='string'&&/^#[\da-f]{6}$/i.test(c)).slice(0,128);if(colors.length)s.colors=colors}
+  s.background=['grid','tunnel','aurora','void'].includes(value.background||'')?value.background!:'grid';
   return s;
 }

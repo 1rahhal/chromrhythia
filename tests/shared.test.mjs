@@ -16,3 +16,14 @@ test('an upload is listed and downloaded by a second visitor without downloading
  const download=await api(request('/api/maps/'+id+'/download',{headers:{authorization:'Bearer '+token}}),env);assert.deepEqual(Buffer.from(await download.arrayBuffer()),data);
 });
 test('upload size and origin restrictions are enforced',async()=>{assert.equal((await api(request('/api/maps/'+id,{method:'PUT',headers:{authorization:'Bearer '+token,'content-length':'999999999','x-map-metadata':meta},body:'x'}),env)).status,413);assert.equal((await api(request('/api/maps/'+id,{method:'PUT',headers:{authorization:'Bearer '+token,'content-length':'1','x-map-metadata':meta,origin:'https://other.test'},body:'x'}),env)).status,403)});
+
+test('cover thumbnails require auth and an existing map, then are shared without entering the map index',async()=>{
+ const cover=Buffer.from([137,80,78,71,13,10,26,10,1,2,3]);
+ const headers={authorization:'Bearer '+token,'content-length':String(cover.length),origin:'https://game.test'};
+ assert.equal((await api(request('/api/maps/'+id+'/cover'),env)).status,401);
+ assert.equal((await api(request('/api/maps/'+'0'.repeat(64)+'/cover',{method:'PUT',headers,body:cover}),env)).status,404);
+ assert.equal((await api(request('/api/maps/'+id+'/cover',{method:'PUT',headers,body:cover}),env)).status,201);
+ const r=await api(request('/api/maps/'+id+'/cover',{headers:{authorization:'Bearer '+token}}),env);
+ assert.equal(r.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await r.arrayBuffer()),cover);
+ const index=await (await api(request('/api/maps',{headers:{authorization:'Bearer '+token}}),env)).json();assert.equal(index.maps.length,1);
+});

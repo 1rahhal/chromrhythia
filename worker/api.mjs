@@ -17,8 +17,23 @@ export async function api(request,env){
       const maps=[];for(const item of list.objects){try{maps.push(metadata(item))}catch{}}
       return json({maps,cursor:list.truncated?list.cursor:null});
     }
-    const match=path.match(/^\/api\/maps\/([a-f0-9]{64})(\/download)?$/);
+    const match=path.match(/^\/api\/maps\/([a-f0-9]{64})(\/(?:download|cover))?$/);
     if(!match)return json({error:'Not found'},404);const id=match[1],key=`maps/${id}.bin`;
+    if(match[2]==='/cover'){
+      const coverKey=`covers/${id}.image`;
+      if(request.method==='GET'){const cover=await env.BUCKET.get(coverKey);if(!cover)return json({error:'No cover'},404);return new Response(cover.body,{headers:{'content-type':cover.httpMetadata?.contentType||'image/jpeg','cache-control':'private, max-age=31536000, immutable','x-content-type-options':'nosniff'}})}
+      if(request.method==='PUT'){
+        const origin=request.headers.get('origin');if(origin&&origin!==url.origin)return json({error:'Origin not allowed'},403);
+        const size=Number(request.headers.get('content-length'));if(!Number.isInteger(size)||size<1||size>524288)return json({error:'Cover must be under 512 KB'},413);
+        if(!await env.BUCKET.head(key))return json({error:'Map not found'},404);
+        if(await env.BUCKET.head(coverKey))return json({success:true});
+        const bytes=new Uint8Array(await request.arrayBuffer());if(bytes.length>524288)return json({error:'Cover too large'},413);
+        const png=bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71,jpeg=bytes[0]===255&&bytes[1]===216;
+        if(!png&&!jpeg)return json({error:'Use a PNG or JPEG cover'},400);
+        await env.BUCKET.put(coverKey,bytes,{httpMetadata:{contentType:png?'image/png':'image/jpeg'}});return json({success:true},201);
+      }
+      return json({error:'Method not allowed'},405);
+    }
     if(request.method==='GET'&&match[2]){
       const object=await env.BUCKET.get(key);if(!object)return json({error:'Map not found'},404);
       return new Response(object.body,{headers:{'content-type':'application/octet-stream','content-length':String(object.size),'etag':object.httpEtag,'cache-control':'private, max-age=31536000, immutable','x-content-type-options':'nosniff','content-disposition':`attachment; filename="${id}.map"`}});
@@ -29,7 +44,7 @@ export async function api(request,env){
       const header=request.headers.get('x-map-metadata');if(!header||header.length>4000)return json({error:'Missing map metadata'},400);
       let m;try{m=unpack(header)}catch{return json({error:'Invalid metadata'},400)}
       if(!m||typeof m.title!=='string'||typeof m.fileName!=='string'||!(/\.(sspm|phxm|rhm)$/i.test(m.fileName))||!Number.isInteger(m.count)||m.count<1||m.count>2_000_000||!Number.isFinite(m.length)||m.length<0||m.length>86400000)return json({error:'Invalid map metadata'},400);
-      const data={title:m.title.slice(0,120),artist:String(m.artist||'').slice(0,100),mappers:Array.isArray(m.mappers)?m.mappers.slice(0,3).map(x=>String(x).slice(0,40)):[],difficulty:Math.max(0,Math.min(6,Math.floor(Number(m.difficulty)||0))),difficultyName:String(m.difficultyName||'').slice(0,60),count:m.count,length:m.length,fileName:m.fileName.replace(/[^\w .()\-]/g,'_').slice(-150)};
+      const data={title:m.title.slice(0,120),artist:String(m.artist||'').slice(0,100),mappers:Array.isArray(m.mappers)?m.mappers.slice(0,3).map(x=>String(x).slice(0,40)):[],difficulty:Math.max(0,Math.min(6,Math.floor(Number(m.difficulty)||0))),difficultyName:String(m.difficultyName||'').slice(0,60),count:m.count,length:m.length,fileName:m.fileName.replace(/[^\w .()\-]/g,'_').slice(-150),hasCover:!!m.hasCover};
       const existing=await env.BUCKET.head(key);if(existing)return json({map:metadata(existing),duplicate:true});
       // R2 validates the SHA-256 while consuming the stream. No song is buffered in the Worker.
       const stored=await env.BUCKET.put(key,request.body,{sha256:id,onlyIf:{etagDoesNotMatch:'*'},httpMetadata:{contentType:'application/octet-stream'},customMetadata:{chart:pack(data)}});

@@ -23,6 +23,12 @@ The custom settings menu exposes approach rate, spawn distance, fade in, fade ou
 
 Import `.phxm`, `.sspm` v1/v2, `.rhm`, or `.txt` maps. Select the text map and its matching `.mp3`, `.ogg`, or `.wav` together. Three generated practice charts include generated tones; commercial songs are not bundled. Uploaded maps are shared through the hosted cloud library. Selecting a map downloads it on demand and caches it for offline use. Settings, scores and replays stay on the current browser and origin. Export important maps and replays before clearing site data or switching domains.
 
+## Selector, previews and backgrounds
+
+The pitch-black selector uses purple/blue accents, inline SVG icons, embedded SSPM cover art and shared thumbnails capped at 512 pixels. Map artwork loads separately from the song, so browsing does not download every map. The selected chart includes an animated note runway, audio preview, density timeline and seek control. Playback speed is adjustable from 0.25× to 3× using the slider, number field or presets; play time and average notes per minute update with the multiplier. Preview audio uses the same playback rate as gameplay.
+
+Choose Grid, Tunnel, Aurora or Pitch black in Settings. The grid uses the original rewrite texture with a corrected color space and extended floor/ceiling to avoid the old hard edge. The browser renderer skips the full 3D scene in menus, warms shaders before play, updates only visible instance data and paints HUD textures at 30 Hz. Gameplay animation still follows the display refresh rate.
+
 ## Cloud hosting and GitHub Pages
 
 The primary deployment is a cloud Worker with a managed R2 bucket, using `.openai/hosting.json`. `npm run build` creates the encrypted offline-capable client and the ESM Worker at `dist/server/index.js`. Configure `PASSWORD_HASH` as a hosted secret containing the SHA-256 of the chosen password; the plaintext password is not deployed. The source is on GitHub. See [SHARED_HOSTING.md](SHARED_HOSTING.md).
