@@ -17,7 +17,7 @@ Open `http://127.0.0.1:4173`. On the first build, a strong generated password is
 
 ## Controls and settings
 
-Move the mouse to aim; notes are hit automatically as they reach the 3×3 playfield. On phones and tablets, drag a finger or stylus across the playfield to move the cursor. Settings → Touch controls offers direct finger aiming or trackpad-style relative motion using sensitivity. Lifting and placing the finger again continues play; interrupted gestures, device rotation and tab switches pause safely.
+Move the mouse to aim; notes are hit automatically as they reach the 3×3 playfield. On phones and tablets, drag a finger or stylus anywhere on the playfield to move the cursor like a trackpad. The finger landing position does not move the cursor; only drag distance does. Trackpad is the default for new and existing clients. Settings → Touch controls also offers optional direct finger aiming. Lifting and placing the finger again continues play; interrupted gestures, device rotation and tab switches pause safely.
 
 Menus adapt to portrait and landscape screens, with larger touch targets, safe-area spacing and a fixed Play button for the selected map on smaller displays. Narrow gameplay screens fit the entire note area and use a compact HUD. Fullscreen is requested where available; touch play does not require pointer lock. Mouse play keeps pointer capture. Escape or Space pauses; R restarts; Tab skips an available break. Tap the pause button to resume, retry, open settings or quit.
 

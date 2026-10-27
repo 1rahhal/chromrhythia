@@ -1,5 +1,13 @@
-import {clamp,CURSOR_BOUND} from './model';
+import {clamp,CURSOR_BOUND,type Settings} from './model';
 export const CAMERA_Z=3.75,CAMERA_PARALLAX=.25;
+export function migrateTouchAim(settings:Settings,storage:Pick<Storage,'getItem'|'setItem'>){
+  const key='chromrhythia-trackpad-default-v1';if(storage.getItem(key)==='1')return settings;
+  const updated={...settings,touchMode:'relative'};storage.setItem('chromrhythia-settings',JSON.stringify(updated));storage.setItem(key,'1');return updated;
+}
+export function relativeAim(cursor:{x:number;y:number},delta:{dx:number;dy:number},sensitivity:number,fov:number){
+  const gain=sensitivity*fov/70/120;
+  return {x:clamp(cursor.x+delta.dx*gain,-CURSOR_BOUND,CURSOR_BOUND),y:clamp(cursor.y-delta.dy*gain,-CURSOR_BOUND,CURSOR_BOUND)};
+}
 export function gameViewport(width:number,height:number,fov:number){
   const aspect=width/Math.max(1,height),compact=width<900||aspect<1.2;
   const fit=2*Math.atan(1.85/(CAMERA_Z*Math.max(.1,aspect)))*180/Math.PI;
