@@ -58,3 +58,7 @@ Tests cover scoring, health, default approach/fades, chart coordinate conversion
 ## Corresponding source
 
 Every build includes `source.zip`, `SOURCE.txt`, and `LICENSE`. The source archive excludes passwords, local maps, scores and replays. Source provenance and the parity checklist are in [PORT_STATUS.md](PORT_STATUS.md). `scripts/build.mjs` generates the source archive from the project and encrypts only the executable bundle.
+
+The pause panel and results page follow the current rewrite scene layouts. The standalone MISS flash has been removed; misses remain in the native counter. Graphics settings offer Uncapped (display refresh), 60, 120, 144 and 240 FPS limits; judgment/audio timing stays independent of the rendering limit. Chrome still follows the active display refresh rate. Sliders, scrollbars, focus and hover states use the dark theme.
+
+Imported maps become playable from local storage before cloud sharing finishes. Sharing completes in the background; a completion message confirms availability to other visitors. Selecting another chart cancels any older pending Play request, and stale audio decoding cannot replace the selected chart.
