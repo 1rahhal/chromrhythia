@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {mkdtemp} from 'node:fs/promises';
 import {api} from '../worker/api.mjs';
+import {worker} from '../worker/index.mjs';
 import {localBucket} from '../scripts/dev-bucket.mjs';
 const token=createHash('sha256').update('test-only-password').digest('hex');
 const env={PASSWORD_HASH:token,BUCKET:localBucket(await mkdtemp('.cache/shared-test-'))};
@@ -26,4 +27,10 @@ test('cover thumbnails require auth and an existing map, then are shared without
  const r=await api(request('/api/maps/'+id+'/cover',{headers:{authorization:'Bearer '+token}}),env);
  assert.equal(r.headers.get('content-type'),'image/png');assert.deepEqual(Buffer.from(await r.arrayBuffer()),cover);
  const index=await (await api(request('/api/maps',{headers:{authorization:'Bearer '+token}}),env)).json();assert.equal(index.maps.length,1);
+});
+
+test('deployments revalidate mutable asset URLs and cache fingerprinted files safely',async()=>{
+ const assets=Object.fromEntries(['style.css','index.html','source.zip','sw.js','style.123abc.css','game.123abc.bin'].map(path=>[path,{type:'text/plain',base64:btoa('fixture'),etag:'"test"'}]));const site=worker(assets);
+ for(const path of ['style.css','index.html','source.zip','sw.js']){const r=await site.fetch(request('/'+path),{},{});assert.equal(r.headers.get('cache-control'),'no-cache')}
+ for(const path of ['style.123abc.css','game.123abc.bin']){const r=await site.fetch(request('/'+path),{},{});assert.match(r.headers.get('cache-control'),/immutable/)}
 });
