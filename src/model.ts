@@ -1,6 +1,6 @@
 // Gameplay defaults and formulas derived from Rhythia/Client (AGPL-3.0).
 // Source revision: 9200e16441c94f0cffca8ee10beb4e889235c56a.
-export const DEFAULTS = Object.freeze({approachRate:30,spawnDistance:15,fadeIn:10,fadeOut:75,fov:70,sensitivity:0.5,volume:50,musicVolume:50,offset:0,renderScale:1,background:'grid' as string,colors:['#ff0059','#ffd8e6']});
+export const DEFAULTS = Object.freeze({approachRate:30,spawnDistance:15,fadeIn:10,fadeOut:75,fov:70,sensitivity:0.5,volume:50,musicVolume:50,offset:0,renderScale:1,background:'grid' as string,resolutionMode:'auto' as string,colors:['#ff0059','#ffd8e6']});
 export type Settings = typeof DEFAULTS;
 export interface Note {time:number;x:number;y:number;index:number}
 export interface Chart {id:string;title:string;artist:string;mappers:string[];difficulty:number;difficultyName?:string;notes:Note[];length:number;audio?:Uint8Array;cover?:Uint8Array;favorite?:boolean;demo?:boolean;remote?:boolean;downloaded?:boolean;size?:number;count?:number;fileName?:string;hasCover?:boolean}
@@ -44,5 +44,6 @@ export function sanitizeSettings(value:Partial<Settings>):Settings{
   for(const [key,[a,b]]of Object.entries(ranges)){const v=Number((value as Record<string,unknown>)[key]??(DEFAULTS as Record<string,unknown>)[key]);(s as Record<string,unknown>)[key]=Number.isFinite(v)?clamp(v,a,b):(DEFAULTS as Record<string,unknown>)[key]}
   if(Array.isArray(value.colors)){const colors=value.colors.filter(c=>typeof c==='string'&&/^#[\da-f]{6}$/i.test(c)).slice(0,128);if(colors.length)s.colors=colors}
   s.background=['grid','tunnel','aurora','void'].includes(value.background||'')?value.background!:'grid';
+  s.resolutionMode=value.resolutionMode==='fixed'?'fixed':'auto';
   return s;
 }

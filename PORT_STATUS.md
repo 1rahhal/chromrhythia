@@ -34,7 +34,7 @@ This is a playable first browser implementation, **not a completed full-game por
 | Shared map uploads and downloads | Managed Worker/R2, password-protected, all visitors share one library |
 | Low bandwidth and offline play | Compressed bundled runtime, precached core, on-demand maps cached in IndexedDB |
 | Cloud score sync, accounts, multiplayer networking | Not implemented |
-| Performance measurement | Local Chromium QA required; no universal FPS guarantee |
+| Graphics and performance | Automatic or fixed resolution, batched HUD glyphs, visible FPS counter; device-specific frame rate |
 
 ## Source mapping
 
@@ -46,3 +46,5 @@ This is a playable first browser implementation, **not a completed full-game por
 The native `HealthJudgment.cs` and `HitJudgment.cs` contain unused/unfinished code in this revision; the port follows the active runner instead. Upstream is preserved at the revision link above; future updates need a new parity audit.
 
 The gameplay HUD now uses the rewrite's original panel/bar textures, Nunito and Ubuntu fonts, and the exact 3D positions and viewport sizes in scenes/game.tscn. The stationary playfield border and grid guides are disabled as requested. Pixel-identical rendering across Godot and WebGL has not been verified. The supplied flvxify_dive_to_the_heart_-_kodak_yak.sspm parses as 1,183 notes with embedded audio and cover art.
+
+The selector excludes bundled practice maps. Empty and migrated libraries show only uploaded charts. The dynamic HUD preserves the native positions/fonts while using a cached glyph atlas and one text batch; transparent HUD planes use one pass each.

@@ -2,11 +2,12 @@ import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
 import {NativeHUD} from './native-hud';
+import {AdaptiveResolution,renderRatio} from './performance';
 import {Attempt,approachTime,clamp,noteVisual,type Settings} from './model';
 export class Renderer {
   gl:T.WebGLRenderer;scene=new T.Scene();camera=new T.PerspectiveCamera(70,1,0.05,160);mesh:T.InstancedMesh;opacity:T.InstancedBufferAttribute;
   dummy=new T.Object3D();color=new T.Color();cursor:T.Mesh;grid:T.LineSegments;tunnel=new T.Group();capacity=8192;w=1;h=1;fps=0;
-  ready:Promise<unknown>;hud=new NativeHUD();private lastFPS=performance.now();private frames=0;private environment=new T.Group();private spaceMaterial:T.ShaderMaterial;private hitColor=new T.Color('#ffd8e6');private lastTime=0;private backgroundName='';private aurora=new T.Group();private auroraMaterial:T.ShaderMaterial;private renderScale=1;private warmup?:Promise<void>;
+  ready:Promise<unknown>;hud=new NativeHUD();private lastFPS=performance.now();private frames=0;private environment=new T.Group();private spaceMaterial:T.ShaderMaterial;private hitColor=new T.Color('#ffd8e6');private lastTime=0;private backgroundName='';private aurora=new T.Group();private auroraMaterial:T.ShaderMaterial;private renderScale=1;private warmup?:Promise<void>;private qualityMode='auto';private adaptive=new AdaptiveResolution();private lastFrameAt=0;
   constructor(public canvas:HTMLCanvasElement){
     this.gl=new T.WebGLRenderer({canvas,antialias:false,alpha:false,powerPreference:'high-performance'});this.gl.setClearColor(0x080810);this.gl.outputColorSpace=T.SRGBColorSpace;
     this.camera.position.z=3.75;
@@ -17,7 +18,7 @@ export class Renderer {
     this.mesh=new T.InstancedMesh(geometry,mat,this.capacity);this.mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);this.mesh.frustumCulled=false;this.scene.add(this.mesh);
     this.cursor=new T.Mesh(new T.PlaneGeometry(0.2625,0.2625),new T.MeshBasicMaterial({color:0xffffff,depthTest:false,transparent:true,map:new T.TextureLoader().load('assets/cursor.png')}));this.cursor.position.z=0.001;this.cursor.renderOrder=2;this.scene.add(this.cursor);
     const loader=new T.TextureLoader();
-    for(let i=0;i<9;i++){const texture=loader.load('assets/'+(i%2?'tunnel_space_a.png':'tunnel_ring_b.png'));texture.colorSpace=T.SRGBColorSpace;const ring=new T.Mesh(new T.PlaneGeometry(28,28),new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:T.DoubleSide,color:0xa4a0ff}));ring.position.z=-i*26.25;this.tunnel.add(ring)}this.scene.add(this.tunnel);this.tunnel.visible=false;
+    for(let i=0;i<9;i++){const texture=loader.load('assets/'+(i%2?'tunnel_space_a.png':'tunnel_ring_b.png'));texture.colorSpace=T.SRGBColorSpace;const ring=new T.Mesh(new T.PlaneGeometry(28,28),new T.MeshBasicMaterial({map:texture,transparent:true,depthWrite:false,side:T.DoubleSide,forceSinglePass:true,color:0xa4a0ff}));ring.position.z=-i*26.25;this.tunnel.add(ring)}this.scene.add(this.tunnel);this.tunnel.visible=false;
     this.auroraMaterial=new T.ShaderMaterial({depthWrite:false,uniforms:{time:{value:0}},vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',fragmentShader:'varying vec2 vUv;uniform float time;void main(){vec2 p=vUv;float a=exp(-abs(p.y-0.5-sin(p.x*5.0+time*0.1)*0.12)*12.0);float b=exp(-abs(p.y-0.4-cos(p.x*4.0-time*0.08)*0.15)*15.0);vec3 c=vec3(0.002,0.002,0.008)+a*vec3(0.075,0.013,0.15)+b*vec3(0.01,0.045,0.12);gl_FragColor=vec4(c,1.0);\n#include <colorspace_fragment>\n}'});const auroraPlane=new T.Mesh(new T.PlaneGeometry(400,240),this.auroraMaterial);auroraPlane.position.z=-110;this.aurora.add(auroraPlane);this.scene.add(this.aurora);
     const texture=new T.TextureLoader().load('assets/grid_tile.png');texture.wrapS=texture.wrapT=T.RepeatWrapping;texture.colorSpace=T.SRGBColorSpace;texture.magFilter=T.LinearFilter;texture.minFilter=T.LinearMipmapLinearFilter;
     // Dimensions, repeat count, scroll speed and fog from prefabs/spaces/grid.tscn and Grid.cs.
@@ -25,13 +26,15 @@ export class Renderer {
     for(const y of [-10,10]){const plane=new T.Mesh(new T.PlaneGeometry(1200,1200),this.spaceMaterial);plane.rotation.x=Math.PI/2;plane.position.y=y;this.environment.add(plane)}this.scene.add(this.environment);
     this.grid=new T.LineSegments(new T.BufferGeometry(),new T.LineBasicMaterial());this.scene.add(this.hud.group);
     this.ready=Promise.all([this.hud.ready,fetch('assets/squircle.obj').then(r=>r.text()).then(source=>{const model=new OBJLoader().parse(source);let geometry:T.BufferGeometry|undefined;model.traverse(child=>{if(!geometry&&child instanceof T.Mesh)geometry=child.geometry});if(geometry){geometry.scale(0.875/2,0.875/2,0.875/2);geometry.setAttribute('instanceOpacity',this.opacity);this.mesh.geometry.dispose();this.mesh.geometry=geometry}})]);
-    this.mesh.setColorAt(0,new T.Color('#ffffff'));this.opacity.setUsage(T.DynamicDrawUsage);
+    this.mesh.setColorAt(0,new T.Color('#ffffff'));this.mesh.instanceColor!.setUsage(T.DynamicDrawUsage);this.opacity.setUsage(T.DynamicDrawUsage);
     window.addEventListener('resize',()=>this.resize(this.renderScale));
     this.canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();window.dispatchEvent(new CustomEvent('renderer-lost'))});this.canvas.addEventListener('webglcontextrestored',()=>location.reload());
   }
-  resize(scale=1){this.renderScale=scale;const ratio=Math.min(devicePixelRatio,2)*scale;if(this.w===innerWidth&&this.h===innerHeight&&this.gl.getPixelRatio()===ratio)return;this.w=innerWidth;this.h=innerHeight;this.gl.setPixelRatio(ratio);this.gl.setSize(this.w,this.h,false);this.camera.aspect=this.w/this.h;this.camera.updateProjectionMatrix()}
+  begin(){this.frames=0;this.fps=0;this.lastFPS=performance.now();this.lastFrameAt=0;this.adaptive.reset()}
+  resize(scale=1,mode=this.qualityMode){this.renderScale=scale;this.qualityMode=mode;const ratio=renderRatio(innerWidth,innerHeight,devicePixelRatio,scale,mode,this.adaptive.factor);if(this.w===innerWidth&&this.h===innerHeight&&this.gl.getPixelRatio()===ratio)return;this.w=innerWidth;this.h=innerHeight;this.gl.setPixelRatio(ratio);this.gl.setSize(this.w,this.h,false);this.camera.aspect=this.w/this.h;this.camera.updateProjectionMatrix()}
   warm(settings:Settings){return this.warmup??=this.ready.then(async()=>{this.mesh.count=0;this.hud.group.visible=true;await this.gl.compileAsync(this.scene,this.camera);this.hud.group.visible=false;this.render(0,settings);})}
   render(time:number,s:Settings,attempt?:Attempt,cursor={x:0,y:0},preview=false,spin={x:0,y:0}){
+    if(s.resolutionMode!==this.qualityMode||s.renderScale!==this.renderScale)this.resize(s.renderScale,s.resolutionMode);
     if(this.camera.fov!==s.fov){this.camera.fov=s.fov;this.camera.updateProjectionMatrix()}this.camera.position.set(cursor.x*0.25,cursor.y*0.25,3.75);this.camera.rotation.set(spin.x,spin.y,0,'YXZ');
     this.grid.visible=false;this.cursor.visible=!!attempt;this.cursor.position.set(cursor.x,cursor.y,0.001);
     const dt=Math.min(0.1,Math.max(0,(time-this.lastTime)/1000));this.lastTime=time;if(attempt&&attempt.lastHitIndex>=0)this.hitColor.lerp(this.color.set(s.colors[attempt.lastHitIndex%s.colors.length]),Math.min(1,dt*8));this.spaceMaterial.uniforms.offset.value=time/1000*3;
@@ -55,7 +58,7 @@ export class Renderer {
       const cycle=approachTime(s)*1000;for(let i=0;i<15;i++){const pos=((time+i*247)%Math.max(1000,cycle*4))/Math.max(1000,cycle*4);const depth=s.spawnDistance*(1-pos);const visual=noteVisual(0,depth/s.approachRate*1000,s);this.instance(count++,Math.sin(i*2.3),Math.cos(i*2.3),-depth,preview?visual.opacity:0.18,s.colors[i%s.colors.length],0)}
     }
     this.mesh.count=count;if(count){this.mesh.instanceMatrix.clearUpdateRanges();this.mesh.instanceMatrix.addUpdateRange(0,count*16);this.mesh.instanceMatrix.needsUpdate=true;this.opacity.clearUpdateRanges();this.opacity.addUpdateRange(0,count);this.opacity.needsUpdate=true;if(this.mesh.instanceColor){this.mesh.instanceColor.clearUpdateRanges();this.mesh.instanceColor.addUpdateRange(0,count*3);this.mesh.instanceColor.needsUpdate=true}}
-    this.hud.update(attempt,time);this.gl.render(this.scene,this.camera);this.frames++;const now=performance.now();if(now-this.lastFPS>=500){this.fps=Math.round(this.frames*1000/(now-this.lastFPS));this.frames=0;this.lastFPS=now}
+    this.hud.update(attempt,time);this.gl.render(this.scene,this.camera);this.frames++;const now=performance.now();if(attempt&&this.lastFrameAt&&this.qualityMode==='auto'&&this.adaptive.sample(now-this.lastFrameAt))this.resize(this.renderScale);this.lastFrameAt=now;if(now-this.lastFPS>=500){this.fps=Math.round(this.frames*1000/(now-this.lastFPS));this.frames=0;this.lastFPS=now}
   }
   private instance(index:number,x:number,y:number,z:number,opacity:number,color:string,rotation:number){this.dummy.position.set(x,y,z);this.dummy.rotation.z=rotation;this.dummy.updateMatrix();this.mesh.setMatrixAt(index,this.dummy.matrix);this.mesh.setColorAt(index,this.color.set(color));this.opacity.setX(index,clamp(opacity,0,1))}
 }
