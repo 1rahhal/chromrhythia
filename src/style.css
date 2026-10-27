@@ -68,9 +68,9 @@ body.playing,body:has(#results:not([hidden])){overflow:hidden}
 html,body{min-height:100%;overscroll-behavior-y:contain}button,a,input,select{-webkit-tap-highlight-color:transparent}button{touch-action:manipulation}
 #scene{touch-action:none;-webkit-touch-callout:none;user-select:none;-webkit-user-select:none}
 .topbar{padding-left:max(4vw,env(safe-area-inset-left));padding-right:max(4vw,env(safe-area-inset-right));padding-top:env(safe-area-inset-top)}
-.mobile-play{display:none;position:fixed;z-index:5;bottom:calc(env(safe-area-inset-bottom) + 12px);left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:600px;min-height:60px;padding:12px 20px;text-align:left;justify-content:space-between;box-shadow:0 8px 35px #000c}
+.mobile-play{display:flex;position:fixed;z-index:5;bottom:calc(env(safe-area-inset-bottom) + 12px);left:50%;transform:translateX(-50%);width:calc(100% - 28px);max-width:600px;min-height:60px;padding:12px 20px;text-align:left;justify-content:space-between;box-shadow:0 8px 35px #000c}
 .mobile-play:active{transform:translateX(-50%)}.mobile-play>span{min-width:0}.mobile-play small{display:block;font-size:8px;letter-spacing:1.2px;opacity:.65;margin-bottom:4px}.mobile-play strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:600}.mobile-play>.ui-icon{width:22px;height:22px}
-.map-list{overscroll-behavior:contain}.settings-grid>*{min-width:0}.setting-head{gap:10px}.artwork-heading h2{overflow-wrap:anywhere}.score-row strong{overflow-wrap:anywhere}
+.map-list{overscroll-behavior-y:auto}.settings-grid>*{min-width:0}.setting-head{gap:10px}.artwork-heading h2{overflow-wrap:anywhere}.score-row strong{overflow-wrap:anywhere}
 @media(max-width:1100px){.main{padding-bottom:110px}.mobile-play{display:flex}.topbar{gap:16px;padding-left:20px;padding-right:20px}.brand{font-size:18px}.brand img{width:28px;height:28px}.nav button{min-height:44px}.quality{display:none}}
 @media(any-pointer:coarse){button{min-height:44px}.main{padding-bottom:110px}.mobile-play{display:flex}.map-card{min-height:78px}.art-actions button{width:44px;height:44px;padding:11px}.mod-grid button{font-size:11px}.speed-presets button{min-height:42px;font-size:12px}.color-item button{min-width:36px}.colors input[type=color]{width:44px;height:40px}}
 @media(max-width:700px){
@@ -106,3 +106,6 @@ body.compact-play #hud #skip{right:50%;transform:translateX(50%);bottom:calc(90p
 @media(max-width:700px){.preset-panel{padding:19px}.preset-heading{flex-wrap:wrap;gap:10px}.preset-columns{grid-template-columns:1fr;gap:30px}.preset-save{flex-wrap:wrap}.preset-save input{flex-basis:160px}.preset-save button{flex:1}.preset-actions button{min-height:42px}.preset-author input{font-size:16px}.cursor-controls{grid-template-columns:1fr}.cursor-controls select{max-width:220px}.cursor-preview-panel{padding:18px}.fps-help summary{min-height:36px;line-height:36px}}
 
 .cursor-preview-inline{margin:16px 0;background:radial-gradient(ellipse,#160d23,#030205);border:1px solid #b78fe21c;border-radius:10px}.cursor-preview-inline canvas{display:block;width:100%;max-width:400px;height:auto;margin:auto}
+
+/* Leave room for the selected-map Play dock on desktop as well as touch screens. */
+.main{padding-bottom:110px}
