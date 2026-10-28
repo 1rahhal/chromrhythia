@@ -55,7 +55,7 @@ test('local score and replay writes commit together, and transaction aborts leav
   }
 });
 
-test('match grades and combo rings react to accuracy, milestones and misses',()=>{
+test('match grades and native combo rings react to accuracy, multiplier progress and misses',()=>{
   assert.equal(accuracyGrade(100),'S');assert.equal(accuracyGrade(96),'A');assert.equal(accuracyGrade(85),'C');
-  assert.equal(comboRingProgress(0),0);assert.equal(comboRingProgress(99),99);assert.equal(comboRingProgress(100),100);assert.equal(comboRingProgress(101),1);
+  assert.equal(comboRingProgress(0,5),0);assert.equal(comboRingProgress(2,5),40);assert.equal(comboRingProgress(5,5),100);assert.equal(comboRingProgress(9,5),100);
 });

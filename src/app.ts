@@ -158,7 +158,7 @@ function processNotes(t:number){if(!attempt)return;if(replay)replaySettings=repl
   if(replay&&t>=replayEndAt){a.alive=replay.alive??a.alive;void finish();return}
   if(t>=Math.max(a.chart.length+1000,(audio?.buffer?.duration??0)*1000))void finish();
 }
-function hud(t:number){updateMatchHud($('#hud'),attempt!,t)}
+function hud(t:number){updateMatchHud($('#hud'),attempt!,t,settings)}
 async function finish(){if(!attempt||finishing)return;finishing=true;starting=false;launches.cancel();$('#toast').hidden=true;document.body.classList.remove('playing');paused=true;audio?.stop();stopCapture();const a=attempt;$('#hud').hidden=true;$('#pause').hidden=true;
   let saveError='';if(!replay){
     const id=crypto.randomUUID();frames.push([gameTime,cursor.x,cursor.y,spin.x,spin.y]);

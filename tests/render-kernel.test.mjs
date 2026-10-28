@@ -44,11 +44,11 @@ test('cached note colors retain color-space conversion and detect edits in the s
 
 test('HUD caches node lookup and skips unchanged ring and accessibility mutations',()=>{
   let lookups=0,writes=0;const nodes=new Map(),root={querySelector(selector){lookups++;if(!nodes.has(selector))nodes.set(selector,{textContent:'',className:'',setAttribute(){writes++}});return nodes.get(selector)}};
-  const attempt={accuracy:100,misses:0,combo:0,chart:{length:60000}};
+  const attempt={accuracy:100,misses:0,combo:0,multiplier:1,multiplierProgress:0,increment:5,chart:{length:60000}};
   updateMatchHud(root,attempt,100);const initialLookups=lookups,initialWrites=writes;
   for(let i=0;i<100;i++)updateMatchHud(root,attempt,100+i);
   assert.equal(lookups,initialLookups);assert.equal(writes,initialWrites);
-  attempt.combo=7;updateMatchHud(root,attempt,200);assert.equal(writes,initialWrites+2);
+  attempt.combo=7;attempt.multiplierProgress=2;updateMatchHud(root,attempt,200);assert.equal(writes,initialWrites+2);
 });
 
 test('reused replay and visual outputs retain results, camera interpolation and backward settings lookup',()=>{

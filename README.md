@@ -90,3 +90,5 @@ Scores and cursor replays stay in this browser's IndexedDB. Each new score and i
 The floating match HUD follows the supplied rhythia.com replay-viewer recording, with accuracy, misses, a grade in place of RP, and a combo ring. Settings cards follow the supplied screenshots. Gameplay defaults, including approach rate and spawn distance, are unchanged.
 
 The renderer now indexes the original note mesh, shares tunnel textures, caches note colors, writes instance transforms directly, and reduces replay/HUD/cursor allocation and upload work. Run `node scripts/benchmark-engine.mjs` for the CPU preparation microbenchmark; this does not measure browser FPS. Detailed measurements and verification limits are in `PORT_STATUS.md`. Rendering still follows the browser's animation callbacks; choosing Uncapped removes the game's limiter but does not override Chrome or the display's refresh rate.
+
+The original polygon multiplier/combo ring is restored beside the playfield, above accuracy. Its single fixed color is configured under Settings > Interface > Combo ring color and is retained in saved/shared presets. It no longer changes color at the maximum multiplier.
