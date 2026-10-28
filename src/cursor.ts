@@ -10,9 +10,10 @@ export class TrailHistory {
     return this.points;
   }
 }
+const cursorShapes=['native','square','circle','diamond'];
 export class GameCursor {
   group=new T.Group();head:T.Mesh;trail:T.InstancedMesh;history=new TrailHistory();
-  private material:T.ShaderMaterial;private alpha=new T.InstancedBufferAttribute(new Float32Array(64),1);private dummy=new T.Object3D();
+  private material:T.ShaderMaterial;private alpha=new T.InstancedBufferAttribute(new Float32Array(64),1);private colorKey='';private size=0;
   constructor(){
     this.material=new T.ShaderMaterial({depthTest:false,depthWrite:false,transparent:true,uniforms:{color:{value:new T.Color('#ffffff')},shape:{value:0},filled:{value:false},opacity:{value:1},cursorTexture:{value:new T.TextureLoader().load('assets/cursor.png')}},vertexShader:`varying vec2 vUv;varying float vAlpha;
       #ifdef USE_INSTANCING
@@ -36,11 +37,11 @@ export class GameCursor {
   reset(){this.history.reset();this.trail.count=0}
   update(x:number,y:number,s:Settings,visible:boolean,now:number){
     this.group.visible=visible;if(!visible){this.reset();return}
-    const u=this.material.uniforms;u.color.value.set(s.cursorColor);u.shape.value=Math.max(0,['native','square','circle','diamond'].indexOf(s.cursorShape));u.filled.value=s.cursorFill;u.opacity.value=s.cursorOpacity/100;
-    this.head.position.set(x,y,.003);this.head.scale.setScalar(s.cursorSize);
+    const u=this.material.uniforms;if(this.colorKey!==s.cursorColor){u.color.value.set(s.cursorColor);this.colorKey=s.cursorColor}u.shape.value=Math.max(0,cursorShapes.indexOf(s.cursorShape));u.filled.value=s.cursorFill;u.opacity.value=s.cursorOpacity/100;
+    this.head.position.set(x,y,.003);if(this.size!==s.cursorSize){this.head.scale.setScalar(s.cursorSize);this.size=s.cursorSize}
     if(!s.cursorTrail){this.reset();return}
     const points=this.history.sample(x,y,now,s.trailLength);let count=0;
-    for(const p of points){const life=Math.max(0,1-(now-p.at)/s.trailLength);if(life<=0)continue;this.dummy.position.set(p.x,p.y,.002);this.dummy.scale.setScalar(s.cursorSize*(.3+.65*life));this.dummy.updateMatrix();this.trail.setMatrixAt(count,this.dummy.matrix);this.alpha.setX(count,life*life*s.trailOpacity/100);count++}
-    this.trail.count=count;if(count){this.trail.instanceMatrix.needsUpdate=true;this.alpha.needsUpdate=true}
+    for(const p of points){const life=Math.max(0,1-(now-p.at)/s.trailLength);if(life<=0)continue;const matrix=this.trail.instanceMatrix.array as Float32Array,offset=count*16,scale=s.cursorSize*(.3+.65*life);matrix[offset]=matrix[offset+5]=matrix[offset+10]=scale;matrix[offset+12]=p.x;matrix[offset+13]=p.y;matrix[offset+14]=.002;this.alpha.setX(count,life*life*s.trailOpacity/100);count++}
+    this.trail.count=count;if(count){this.trail.instanceMatrix.clearUpdateRanges();this.trail.instanceMatrix.addUpdateRange(0,count*16);this.trail.instanceMatrix.needsUpdate=true;this.alpha.clearUpdateRanges();this.alpha.addUpdateRange(0,count);this.alpha.needsUpdate=true}
   }
 }

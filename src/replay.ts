@@ -8,17 +8,25 @@ export function replayEnd(record:WebReplay,chart:Chart){
   for(let i=0;i<record.results.length;i++)if(record.results[i]!==-2)end=Math.max(end,chart.notes[i].time+(record.results[i]===-1?HIT_WINDOW+.01:record.results[i])*record.speed);
   return end;
 }
-export function replayJudgment(result:number,late:number){
-  return {hit:result>=0&&late>=result,miss:result===-1&&late>HIT_WINDOW,lateness:result>=0?result:late};
+export function replayJudgment(result:number,late:number,out={hit:false,miss:false,lateness:0}){
+  out.hit=result>=0&&late>=result;out.miss=result===-1&&late>HIT_WINDOW;out.lateness=result>=0?result:late;return out;
 }
-export function replayPoint(record:WebReplay,t:number,index=0){
+export function replayPoint(record:WebReplay,t:number,index=0,out={index:0,x:0,y:0,spinX:0,spinY:0}){
   while(index+1<record.frames.length&&record.frames[index+1][0]<=t)index++;
   const p=record.frames[index],n=record.frames[Math.min(index+1,record.frames.length-1)];
   const f=p&&n?clamp((t-p[0])/Math.max(1,n[0]-p[0]),0,1):0;
-  const value=(i:number)=>p&&n?(p[i]||0)+((n[i]||0)-(p[i]||0))*f:0;
-  return {index,x:value(1),y:value(2),spinX:value(3),spinY:value(4)};
+  out.index=index;
+  if(p&&n){out.x=p[1]+(n[1]-p[1])*f;out.y=p[2]+(n[2]-p[2])*f;out.spinX=(p[3]||0)+((n[3]||0)-(p[3]||0))*f;out.spinY=(p[4]||0)+((n[4]||0)-(p[4]||0))*f}
+  else out.x=out.y=out.spinX=out.spinY=0;
+  return out;
 }
-export function replaySettingsAt(record:WebReplay,t:number):Settings{
+export function replaySettingsAt(record:WebReplay,t:number,cursor?:{index:number;time:number}):Settings{
+  if(cursor){
+    if(t<cursor.time)cursor.index=-1;cursor.time=t;
+    const changes=record.settingsChanges||[];
+    while(cursor.index+1<changes.length&&changes[cursor.index+1].time<=t)cursor.index++;
+    return cursor.index>=0?changes[cursor.index].settings:record.settings;
+  }
   let s=record.settings;
   for(const change of record.settingsChanges||[]){if(change.time>t)break;s=change.settings}
   return s;
