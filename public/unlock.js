@@ -1,7 +1,7 @@
 (() => {
   const form=document.querySelector('#unlock-form'),button=document.querySelector('#unlock-button'),error=document.querySelector('#unlock-error'),input=document.querySelector('#password');
   const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(registration=>registration.update()).catch(()=>{});
   form.addEventListener('submit',async event=>{
     event.preventDefault();error.textContent='';button.disabled=true;button.textContent='Unlocking…';
     try{

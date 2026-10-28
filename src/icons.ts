@@ -14,6 +14,7 @@ Object.assign(paths,{
   spy:'<path d="M3 11h18M5 11l3-8 4 2 4-2 3 8M10 17h4m-12-1 2 6m18-6-2 6"/><circle cx="7" cy="17" r="3"/><circle cx="17" cy="17" r="3"/>',
   vortex:'<ellipse cx="12" cy="12" rx="10" ry="9" transform="rotate(-25 12 12)"/><ellipse cx="12" cy="12" rx="5.5" ry="5" transform="rotate(-25 12 12)"/><ellipse cx="12" cy="12" rx="1.5" ry="2"/>',
   cursor:'<path d="M4 16a8 8 0 1 1 16-4c-8-3-8 6-13 6z" fill="currentColor"/><path d="m5 17 5 5h11l-8-8"/>',
+  undo:'<path d="M3 8h11a6 6 0 0 1 0 12h-3M3 8l5-5M3 8l5 5"/>',
   more:'<circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/>'
 });
 export const icon=(name:string)=>`<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.bolt}</svg>`;

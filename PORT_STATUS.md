@@ -54,3 +54,6 @@ The selector excludes bundled practice maps. Empty and migrated libraries show o
 Pause and results use the current rewrite scene structure and wording, adapted to responsive HTML/CSS. There is no standalone MISS label. The library cancels stale start requests and safely handles concurrent map/audio loading; local imports do not wait for cloud upload completion.
 
 The selector follows the supplied native-client visual references with grid/list catalogs, cover stacks, local scores, Play/modifier controls and a speed popover. Settings uses a category overlay and gesture-safe touch sliders. The UI shows actual local grades and unranked map status; online ranking, RP, multiplayer and native collections are not implemented. RHM embedded cover import and persistent cloud artwork recovery are supported.
+
+### Replay and HUD update
+Local score/replay writes are atomic. Web replay v2 preserves attempt endpoints, unjudged notes, practice starts, camera mode/rotations and timed settings changes; v1 imports remain supported. Native PHXR replay conversion is still not implemented. The match HUD now follows the supplied website replay viewer, substituting the current accuracy grade for RP. No gameplay defaults changed.
