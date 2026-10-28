@@ -29,4 +29,11 @@ export async function uploadCover(chart:Chart){
 }
 
 export async function communityPresets(cursor?:string){const r=await fetch('api/presets'+(cursor?'?cursor='+encodeURIComponent(cursor):''),{headers:headers(),signal:AbortSignal.timeout(10000)});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not load shared presets');return data as {presets:import('./presets').Preset[];cursor:string|null}}
-export async function publishPreset(preset:import('./presets').LocalPreset,author:string){const r=await fetch('api/presets'+(preset.publicId?'/'+preset.publicId:''),{method:preset.publicId?'PUT':'POST',headers:{...headers(),'Content-Type':'application/json','X-Preset-Key':preset.publisherKey!},body:JSON.stringify({id:preset.id,name:preset.name,author,settings:preset.settings})});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not publish preset');return data.preset as import('./presets').Preset}
+export async function publishPreset(preset:import('./presets').LocalPreset,author:string){
+  try{
+    const r=await fetch('api/presets'+(preset.publicId?'/'+preset.publicId:''),{method:preset.publicId?'PUT':'POST',headers:{...headers(),'Content-Type':'application/json','X-Preset-Key':preset.publisherKey!},body:JSON.stringify({id:preset.id,name:preset.name,author,settings:preset.settings}),signal:AbortSignal.timeout(20000)});
+    const data=await r.json();if(!r.ok)throw Error(data.error||'Could not publish preset');
+    if(!data.preset?.id)throw Error('The server did not confirm this preset. Retry Save global.');
+    return data.preset as import('./presets').Preset;
+  }catch(e){if(e instanceof Error&&(e.name==='TimeoutError'||e.name==='AbortError'))throw Error('Global save timed out. Your local copy is safe; retry Save global.');throw e}
+}

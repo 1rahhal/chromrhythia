@@ -1,4 +1,4 @@
-# Chromrhythia
+# Renythia
 
 A browser-native port **in development** based on the **current Rhythia C# rewrite**, not the legacy Sound Space Plus client. It uses TypeScript, Three.js/WebGL, Web Audio, and IndexedDB, with a cloud Worker/R2 shared map library. This build is playable but does **not** reproduce the entirety of the native game; see [PORT_STATUS.md](PORT_STATUS.md).
 
@@ -82,3 +82,5 @@ The selector uses a large selected cover and local score panel on the left, with
 Settings opens as a searchable category panel, with all existing gameplay, cursor, audio, background, touch and preset controls. Touch sliders require an intentional sideways drag. Taps and vertical scroll gestures do not change values; mouse and keyboard adjustment remain available. Scrolling over a focused numeric field does not increment it.
 
 RHM imports read the archive's bundled cover rather than a native-client cache path. Missing shared artwork can be recovered from the original uploaded file using bounded R2 range reads, then stored for all visitors. Loading is no longer limited to the first 20 maps, failures can retry, and thumbnails load separately from song audio. Encoded SSPM v1/v2, RHM and PHXM artwork is supported; legacy raw-pixel SSPM v1 covers and ZIP64 archives are not. Maps with no embedded image show an intentional fallback.
+
+Visible branding is Renythia. The existing deployment, repository, browser storage keys and map IDs are retained for continuity. Selector styling follows the supplied reference screenshots; its exact proprietary client/skin assets were not present in the retained open-source rewrite. Global preset saving captures the current settings, retains a stable publishing identity for retries, and keeps each visitor’s active settings independent.
