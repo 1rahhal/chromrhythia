@@ -52,3 +52,5 @@ The gameplay HUD now uses the rewrite's original panel/bar textures, Nunito and 
 The selector excludes bundled practice maps. Empty and migrated libraries show only uploaded charts. The dynamic HUD preserves the native positions/fonts while using a cached glyph atlas and one text batch; transparent HUD planes use one pass each.
 
 Pause and results use the current rewrite scene structure and wording, adapted to responsive HTML/CSS. There is no standalone MISS label. The library cancels stale start requests and safely handles concurrent map/audio loading; local imports do not wait for cloud upload completion.
+
+The selector follows the supplied native-client visual references with grid/list catalogs, cover stacks, local scores, Play/modifier controls and a speed popover. Settings uses a category overlay and gesture-safe touch sliders. The UI shows actual local grades and unranked map status; online ranking, RP, multiplayer and native collections are not implemented. RHM embedded cover import and persistent cloud artwork recovery are supported.

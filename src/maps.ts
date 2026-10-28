@@ -48,13 +48,13 @@ export async function parseMap(bytes:Uint8Array,name:string,pairedAudio?:Uint8Ar
     const [id,...items]=strFromU8(bytes).trim().split(',');const notes=items.filter(Boolean).map((v,i)=>{const a=v.split('|').map(Number);if(a.length!==3)throw Error('Invalid text map');return {x:1-a[0],y:a[1]-1,time:a[2],index:i}});
     chart=normalize({id,title:name.replace(/\.txt$/i,''),artist:'',mappers:[],difficulty:0,notes,length:0,audio:pairedAudio});
   }else if(ext==='phxm'||ext==='zip'||ext==='rhm'){
-    const files=archive(bytes),find=(n:string)=>Object.keys(files).find(k=>k===n||k.endsWith('/'+n));
+    const files=archive(bytes),find=(n?:string|null)=>{if(!n)return;const normalized=n.replaceAll('\\','/').replace(/^\.\//,'').toLowerCase();return Object.keys(files).find(k=>{const key=k.replaceAll('\\','/').toLowerCase();return key===normalized||key.endsWith('/'+normalized)})};
     if(ext==='rhm'||find('map')){
       const d=JSON.parse(strFromU8(files[find('map')!]));const notes=d.Notes.map((n:{Time:number;X:number;Y:number},i:number)=>({time:n.Time,x:n.X-1,y:1-n.Y,index:i}));
-      chart=normalize({id:'',...splitTitle(d.Title||name),mappers:d.Mappers||[],difficulty:d.Difficulty||0,difficultyName:d.CustomDifficultyName,notes,length:0,audio:files[find('audio')||find(d.AudioFileName)||''],cover:files[find(d.ImagePath)||'']});
+      chart=normalize({id:'',...splitTitle(d.Title||name),mappers:d.Mappers||[],difficulty:d.Difficulty||0,difficultyName:d.CustomDifficultyName,notes,length:0,audio:files[find('audio')||find(d.AudioFileName)||''],cover:files[find('cover')||find('cover.png')||find('cover.jpg')||find('cover.webp')||find(d.ImagePath)||'']});
     }else{
       const mk=find('metadata.json'),ok=find('objects.phxmo');if(!mk||!ok)throw Error('Archive needs metadata.json and objects.phxmo');const m=JSON.parse(strFromU8(files[mk]));
-      chart=normalize({id:m.ID||'',title:m.Title||name,artist:m.Artist||'',mappers:m.Mappers||[],difficulty:m.Difficulty||0,difficultyName:m.DifficultyName,notes:parsePHXMO(files[ok]),length:m.Length||0,audio:files[find('audio.'+(m.AudioExt||'mp3'))||find('audio.ogg')||find('audio.wav')||''],cover:files[find('cover.png')||'']});
+      chart=normalize({id:m.ID||'',title:m.Title||name,artist:m.Artist||'',mappers:m.Mappers||[],difficulty:m.Difficulty||0,difficultyName:m.DifficultyName,notes:parsePHXMO(files[ok]),length:m.Length||0,audio:files[find('audio.'+(m.AudioExt||'mp3'))||find('audio.ogg')||find('audio.wav')||''],cover:files[find('cover.png')||find('cover.jpg')||find('cover.jpeg')||find('cover.webp')||find('cover.gif')||find(m.CoverPath)||find(m.ImagePath)||'']});
     }
   }else throw Error('Choose a .phxm, .sspm, .rhm or .txt map');
   const hash=await crypto.subtle.digest('SHA-256',bytes.slice().buffer);chart.id=Array.from(new Uint8Array(hash)).map(x=>x.toString(16).padStart(2,'0')).join('');return chart;

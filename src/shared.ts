@@ -8,8 +8,25 @@ export async function uploadShared(chart:Chart,bytes:Uint8Array,fileName:string)
 export async function downloadShared(chart:Chart,onProgress?:(loaded:number,total:number)=>void){
   const r=await fetch(`api/maps/${chart.id}/download`,{headers:headers()});if(!r.ok)throw Error('Could not download this map. Try again when connected.');const reader=r.body!.getReader(),chunks:Uint8Array[]=[];let size=0;const total=Number(r.headers.get('content-length'))||chart.size||0;while(true){const {done,value}=await reader.read();if(done)break;chunks.push(value);size+=value.length;if(size>256*1024*1024){await reader.cancel();throw Error('Map is too large')}onProgress?.(size,total)}const bytes=new Uint8Array(size);let p=0;for(const c of chunks){bytes.set(c,p);p+=c.length}return bytes;
 }
-export async function fetchCover(id:string){const cache=await caches.open('rhythia-cover-art-v1');const path=new URL(`api/maps/${id}/cover`,location.href).href;const cached=await cache.match(path);if(cached)return new Uint8Array(await cached.arrayBuffer());const r=await fetch(path,{headers:headers(),signal:AbortSignal.timeout(8000)});if(!r.ok)return;await cache.put(path,r.clone());return new Uint8Array(await r.arrayBuffer())}
-export async function uploadCover(chart:Chart){if(!chart.cover?.length||chart.demo)return;const bitmap=await createImageBitmap(new Blob([chart.cover.slice().buffer]));const ratio=Math.min(1,512/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*ratio));canvas.height=Math.max(1,Math.round(bitmap.height*ratio));canvas.getContext('2d')!.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();const blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',0.8));if(blob)await fetch(`api/maps/${chart.id}/cover`,{method:'PUT',headers:{...headers(),'Content-Type':'image/jpeg'},body:blob});}
+export async function fetchCover(id:string){
+  const path=new URL(`api/maps/${id}/cover`,location.href).href;let cache:Cache|undefined;
+  try{cache=await caches.open('rhythia-cover-art-v2');const cached=await cache.match(path);if(cached)return new Uint8Array(await cached.arrayBuffer())}catch{/* Restricted storage must not prevent artwork downloads. */}
+  const r=await fetch(path,{headers:headers(),signal:AbortSignal.timeout(20000)});if(r.status===404)return;if(!r.ok)throw Error('Artwork is temporarily unavailable. Retry when connected.');
+  const bytes=new Uint8Array(await r.arrayBuffer());if(!bytes.length||bytes.length>8*1024*1024)throw Error('Invalid artwork response');
+  if(cache)try{await cache.put(path,new Response(bytes.slice().buffer,{headers:{'content-type':r.headers.get('content-type')||'application/octet-stream'}}))}catch{}
+  return bytes;
+}
+async function coverImage(bytes:Uint8Array):Promise<{image:CanvasImageSource;width:number;height:number;close:()=>void}>{
+  const blob=new Blob([bytes.slice().buffer]);if(typeof createImageBitmap==='function')try{const bitmap=await createImageBitmap(blob);return {image:bitmap,width:bitmap.width,height:bitmap.height,close:()=>bitmap.close()}}catch{}
+  const url=URL.createObjectURL(blob),image=new Image();try{image.src=url;await image.decode();return {image,width:image.naturalWidth,height:image.naturalHeight,close:()=>URL.revokeObjectURL(url)}}catch(e){URL.revokeObjectURL(url);throw e}
+}
+export async function uploadCover(chart:Chart){
+  if(!chart.cover?.length||chart.demo)return;
+  const decoded=await coverImage(chart.cover);let blob:Blob|null;
+  try{const ratio=Math.min(1,512/Math.max(decoded.width,decoded.height));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(decoded.width*ratio));canvas.height=Math.max(1,Math.round(decoded.height*ratio));canvas.getContext('2d')!.drawImage(decoded.image,0,0,canvas.width,canvas.height);blob=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',.8))}finally{decoded.close()}
+  if(!blob)throw Error('Could not create an artwork thumbnail');
+  const r=await fetch(`api/maps/${chart.id}/cover`,{method:'PUT',headers:{...headers(),'Content-Type':'image/jpeg'},body:blob,signal:AbortSignal.timeout(20000)});if(!r.ok)throw Error('Artwork thumbnail was not shared. Retry when connected.');
+}
 
 export async function communityPresets(cursor?:string){const r=await fetch('api/presets'+(cursor?'?cursor='+encodeURIComponent(cursor):''),{headers:headers(),signal:AbortSignal.timeout(10000)});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not load shared presets');return data as {presets:import('./presets').Preset[];cursor:string|null}}
 export async function publishPreset(preset:import('./presets').LocalPreset,author:string){const r=await fetch('api/presets'+(preset.publicId?'/'+preset.publicId:''),{method:preset.publicId?'PUT':'POST',headers:{...headers(),'Content-Type':'application/json','X-Preset-Key':preset.publisherKey!},body:JSON.stringify({id:preset.id,name:preset.name,author,settings:preset.settings})});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not publish preset');return data.preset as import('./presets').Preset}

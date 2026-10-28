@@ -74,3 +74,11 @@ My presets saves named snapshots on the current browser. Share with everyone pub
 Uncapped disables the game's frame limiter. The browser-callback readout measures actual animation callbacks, independently of the rendering cap. If both remain near 60, check the OS display refresh rate and Chrome's performance settings. A website cannot switch the monitor to a higher refresh rate or override browser scheduling. High-refresh cadence is covered by simulated 120/144/240 Hz tests; available hardware was configured at 60 Hz during verification.
 
 The selected-map Play dock is available on desktop and touch screens. The map list lets wheel scrolling continue into the page at its edges, so the selected map options remain reachable.
+
+## Reference-style selector and safe settings
+
+The selector uses a large selected cover and local score panel on the left, with switchable artwork grid/list views on the right. Search, favorites, sort, import, map previews, the compact speed menu and modifier buttons remain functional. Map rank labels reflect this unranked shared library; local letter grades come from real attempts.
+
+Settings opens as a searchable category panel, with all existing gameplay, cursor, audio, background, touch and preset controls. Touch sliders require an intentional sideways drag. Taps and vertical scroll gestures do not change values; mouse and keyboard adjustment remain available. Scrolling over a focused numeric field does not increment it.
+
+RHM imports read the archive's bundled cover rather than a native-client cache path. Missing shared artwork can be recovered from the original uploaded file using bounded R2 range reads, then stored for all visitors. Loading is no longer limited to the first 20 maps, failures can retry, and thumbnails load separately from song audio. Encoded SSPM v1/v2, RHM and PHXM artwork is supported; legacy raw-pixel SSPM v1 covers and ZIP64 archives are not. Maps with no embedded image show an intentional fallback.

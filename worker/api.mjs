@@ -1,3 +1,4 @@
+import {recoverCover,imageType} from './artwork.mjs';
 import {presetsAPI} from './presets.mjs';
 const MAX_MAP_SIZE=64*1024*1024;
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
@@ -23,16 +24,16 @@ export async function api(request,env){
     if(!match)return json({error:'Not found'},404);const id=match[1],key=`maps/${id}.bin`;
     if(match[2]==='/cover'){
       const coverKey=`covers/${id}.image`;
-      if(request.method==='GET'){const cover=await env.BUCKET.get(coverKey);if(!cover)return json({error:'No cover'},404);return new Response(cover.body,{headers:{'content-type':cover.httpMetadata?.contentType||'image/jpeg','cache-control':'private, max-age=31536000, immutable','x-content-type-options':'nosniff'}})}
+      if(request.method==='GET'){let cover=await env.BUCKET.get(coverKey);if(!cover)cover=await recoverCover(env.BUCKET,key,id);if(!cover||cover.customMetadata?.source==='absent')return json({error:'This map has no embedded cover.'},404);return new Response(cover.body,{headers:{'content-type':cover.httpMetadata?.contentType||'image/jpeg','content-length':String(cover.size),'cache-control':'private, max-age=31536000, immutable','x-content-type-options':'nosniff'}})}
       if(request.method==='PUT'){
         const origin=request.headers.get('origin');if(origin&&origin!==url.origin)return json({error:'Origin not allowed'},403);
         const size=Number(request.headers.get('content-length'));if(!Number.isInteger(size)||size<1||size>524288)return json({error:'Cover must be under 512 KB'},413);
         if(!await env.BUCKET.head(key))return json({error:'Map not found'},404);
-        if(await env.BUCKET.head(coverKey))return json({success:true});
+        const existing=await env.BUCKET.head(coverKey);if(existing&&existing.customMetadata?.source!=='embedded'&&existing.customMetadata?.source!=='absent')return json({success:true});
         const bytes=new Uint8Array(await request.arrayBuffer());if(bytes.length>524288)return json({error:'Cover too large'},413);
-        const png=bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71,jpeg=bytes[0]===255&&bytes[1]===216;
-        if(!png&&!jpeg)return json({error:'Use a PNG or JPEG cover'},400);
-        await env.BUCKET.put(coverKey,bytes,{httpMetadata:{contentType:png?'image/png':'image/jpeg'}});return json({success:true},201);
+        const type=imageType(bytes);if(!type)return json({error:'Use an encoded PNG, JPEG, WebP or GIF cover'},400);
+        if(existing?.customMetadata?.source==='embedded'&&bytes.length>=existing.size)return json({success:true});
+        await env.BUCKET.put(coverKey,bytes,{httpMetadata:{contentType:type},customMetadata:{artworkVersion:'2',source:'thumbnail'}});return json({success:true},201);
       }
       return json({error:'Method not allowed'},405);
     }
