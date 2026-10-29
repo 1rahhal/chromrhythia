@@ -23,7 +23,7 @@ test('global save captures the latest cursor and colors and another client appli
   try{
     globalThis.localStorage=a;
     saveCurrentPreset('Ren',sanitizeSettings({cursorShape:'square',colors:['#111111']}));
-    const current=sanitizeSettings({cursorShape:'circle',cursorFill:true,colors:['#9d60cf','#2266ee'],parallax:37});
+    const current=sanitizeSettings({cursorShape:'circle',cursorFill:true,colors:['#9d60cf','#2266ee'],parallax:37,sensitivity:12.5});
     await sharePreset(saveCurrentPreset('Ren',current),'Ren',publish);
     assert.equal(readPresets().length,1);
     assert.ok(readPresets()[0].publicId);
@@ -32,10 +32,12 @@ test('global save captures the latest cursor and colors and another client appli
     const response=await api(new Request('https://test.game/api/presets',{headers:{authorization:'Bearer '+token}}),env);
     const shared=(await response.json()).presets[0];
     assert.equal(shared.settings.cursorShape,'circle');
+    assert.equal(shared.settings.sensitivity,12.5);
     assert.deepEqual(shared.settings.colors,current.colors);
     assert.equal(shared.publisherKey,undefined);
     const applied=sanitizeSettings(shared.settings);applied.parallax=0;
     saveCurrentPreset('My copy',applied);
+    assert.equal(readPresets()[0].settings.sensitivity,12.5);
     assert.equal(readPresets()[0].settings.parallax,0);
     globalThis.localStorage=a;
     assert.equal(readPresets()[0].settings.parallax,37);

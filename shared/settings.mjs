@@ -1,6 +1,6 @@
 // Shared by the game and cloud profiles. Only these settings can be published.
 export const DEFAULTS=Object.freeze({approachRate:30,spawnDistance:15,fadeIn:10,fadeOut:75,fov:70,parallax:25,sensitivity:.5,volume:50,musicVolume:50,offset:0,renderScale:1,background:'grid',resolutionMode:'auto',frameLimit:0,touchMode:'relative',cursorShape:'native',cursorFill:false,cursorSize:1,cursorColor:'#ffffff',cursorOpacity:100,cursorTrail:false,trailLength:180,trailOpacity:35,comboRingColor:'#ffffff',colors:['#ff0059','#ffd8e6']});
-const ranges={approachRate:[.5,100],spawnDistance:[.5,100],fadeIn:[0,100],fadeOut:[0,100],fov:[30,140],parallax:[0,75],sensitivity:[.05,3],volume:[0,100],musicVolume:[0,100],offset:[-500,500],renderScale:[.5,2],cursorSize:[.4,3],cursorOpacity:[10,100],trailLength:[40,500],trailOpacity:[0,100]};
+const ranges={approachRate:[.5,100],spawnDistance:[.5,100],fadeIn:[0,100],fadeOut:[0,100],fov:[30,140],parallax:[0,75],sensitivity:[.05,20],volume:[0,100],musicVolume:[0,100],offset:[-500,500],renderScale:[.5,2],cursorSize:[.4,3],cursorOpacity:[10,100],trailLength:[40,500],trailOpacity:[0,100]};
 export function sanitizeSettings(value){
   const input=value&&typeof value==='object'&&!Array.isArray(value)?value:{};
   const s={...DEFAULTS,colors:[...DEFAULTS.colors]};
