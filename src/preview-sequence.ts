@@ -1,4 +1,7 @@
 import {Attempt,HIT_WINDOW,approachTime,type Settings,type Chart} from './model';
+// Keep fast settings readable: one four-note loop takes at least 2.4 seconds.
+// The settings and note shader are unchanged; only the preview clock slows down.
+export const previewPlaybackRate=(s:Settings)=>Math.min(1,(approachTime(s)*1000+HIT_WINDOW)/2400);
 // Four reusable notes go through the same depth/fade renderer as a real attempt.
 export class FourNotePreview {
  readonly chart:Chart={id:'settings-preview',title:'Settings Preview',artist:'',mappers:[],difficulty:0,length:1,notes:[[-.85,.85],[.85,.85],[.85,-.85],[-.85,-.85]].map(([x,y],index)=>({x,y,index,time:0}))};

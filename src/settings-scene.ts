@@ -1,6 +1,6 @@
 import type {Renderer} from './renderer';
 import type {Settings} from './model';
-import {FourNotePreview} from './preview-sequence';
+import {FourNotePreview,previewPlaybackRate} from './preview-sequence';
 import {updateMatchHud} from './match-hud';
 import {MediaLayers} from './media-layers';
 
@@ -14,7 +14,7 @@ export class SettingsScene {
  stop(){this.media?.play(false);this.last=0;this.renderer.begin()}
  draw(now:number,s:Settings){
   const canvas=this.canvas,stage=this.stage,hud=this.hud;if(!canvas||!stage||!hud||!this.ready||!stage.isConnected||!stage.getBoundingClientRect().width)return;
-  const paused=canvas.dataset.paused==='1',delta=this.last?Math.max(0,Math.min(100,now-this.last)):0;this.last=now;if(!paused)this.elapsed+=delta;
+  const paused=canvas.dataset.paused==='1',delta=this.last?Math.max(0,Math.min(100,now-this.last)):0;this.last=now;if(!paused)this.elapsed+=delta*previewPlaybackRate(s);
   stage.style.aspectRatio=String(innerWidth/innerHeight);const rect=stage.getBoundingClientRect(),scale=rect.width/innerWidth;
   hud.style.width=innerWidth+'px';hud.style.height=innerHeight+'px';hud.style.transform=`scale(${scale})`;
   const width=Math.max(1,Math.round(Math.min(1100,rect.width*devicePixelRatio))),height=Math.max(1,Math.round(width*innerHeight/innerWidth));

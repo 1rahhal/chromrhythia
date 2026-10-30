@@ -5,7 +5,7 @@ import {build} from 'esbuild';
 import {sanitizeSettings} from '../shared/settings.mjs';
 await mkdir('.cache/preview-tests',{recursive:true});
 await build({entryPoints:['src/preview-sequence.ts','src/volume-overlay.ts','src/match-hud.ts'],outdir:'.cache/preview-tests',bundle:true,platform:'node',format:'esm'});
-const {FourNotePreview}=await import('../.cache/preview-tests/preview-sequence.js');
+const {FourNotePreview,previewPlaybackRate}=await import('../.cache/preview-tests/preview-sequence.js');
 const {draggedVolume}=await import('../.cache/preview-tests/volume-overlay.js');
 const {matchHudMarkup}=await import('../.cache/preview-tests/match-hud.js');
 test('four-note preview keeps exactly four sorted real notes inside the current approach interval',()=>{
@@ -19,6 +19,9 @@ test('four-note preview keeps exactly four sorted real notes inside the current 
 });
 test('dragging anywhere on a volume circle changes volume relatively upward/downward without jumping',()=>{
  assert.equal(draggedVolume(50,400,400),50);assert.equal(draggedVolume(50,400,360),80);assert.equal(draggedVolume(50,400,440),20);assert.equal(draggedVolume(50,400,0),100);assert.equal(draggedVolume(50,0,400),0);
+});
+test('fast appearance settings never make the preview loop faster than 2.4 seconds or modify game settings',()=>{
+ for(const input of [{},{approachRate:100,spawnDistance:.5},{approachRate:2,spawnDistance:80}]){const settings=sanitizeSettings(input),before=structuredClone(settings),rate=previewPlaybackRate(settings);assert.ok(rate>0&&rate<=1);assert.ok((settings.spawnDistance/settings.approachRate*1000+55)/rate>=2399.99);assert.deepEqual(settings,before)}
 });
 test('settings preview reuses the match HUD with isolated element IDs',()=>{
  const game=matchHudMarkup(),preview=matchHudMarkup('settings-');assert.equal(preview.replaceAll('id="settings-','id="'),game);assert.ok(preview.includes('id="settings-combo-ring"'));assert.ok(!preview.includes('id="combo-ring"'));

@@ -61,7 +61,9 @@ export class Renderer {
         if(earthquake){const angle=Math.sin(i*127.1+Math.floor(time/16)*311.7)*Math.PI*2;x+=Math.sin(angle)*d**1.5/2;y+=Math.cos(angle)*d**1.5/2}
         if(chaos){const angle=Math.sin(x*2+y*3+i+time/speed/400)*Math.PI*4;x+=Math.sin(angle)*d*d;y+=Math.cos(angle)*d*d}
         if(vortex){rotation=(d*15)**1.5/60*vortexSpin;const a=x*Math.cos(rotation)-y*Math.sin(rotation),b=x*Math.sin(rotation)+y*Math.cos(rotation),pull=(d*0.85)**3*Math.hypot(a,b);x=a*(1-pull);y=b*(1-pull)}
-        this.instance(count++,x,y,-depth,opacity,i%s.colors.length,rotation);
+        // The four preview notes are re-sorted as they loop. Their source index
+        // stays fixed, so wrapping another note cannot recolor this one.
+        this.instance(count++,x,y,-depth,opacity,(preview?n.index:i)%s.colors.length,rotation);
       }
     }else{
       const cycle=approachTime(s)*1000;for(let i=0;i<15;i++){const pos=((time+i*247)%Math.max(1000,cycle*4))/Math.max(1000,cycle*4);const depth=s.spawnDistance*(1-pos);const visual=noteVisual(0,depth/s.approachRate*1000,s,1,false,this.visual);this.instance(count++,Math.sin(i*2.3),Math.cos(i*2.3),-depth,preview?visual.opacity:0.18,i%s.colors.length,0)}
