@@ -281,3 +281,36 @@ body.compact-play #hud .match-stage{width:100%;height:100%}
 .ring-color-controls{display:flex;align-items:center;gap:8px}
 .ring-color-controls input[type=color]{width:46px;height:35px;padding:3px;border:1px solid #333;border-radius:5px;background:#171717}
 .combo-color-preview{display:grid;place-items:center;padding:22px}.combo-color-preview svg{width:100px;height:100px;font-family:RenythiaUI,Arial,sans-serif}
+
+/* Artwork atmosphere is preblurred once at thumbnail size, then only crossfaded. */
+.selector-backdrop{filter:none;opacity:1;transform:none;overflow:hidden;background:#000}
+.selector-atmosphere{position:absolute;inset:-3%;background-position:center;background-size:cover;opacity:0;transition:opacity .5s ease;pointer-events:none}
+.selector-atmosphere.visible{opacity:.68}
+.selector-main:before{background:linear-gradient(0deg,#0009,#0005),repeating-linear-gradient(45deg,transparent 0 70px,#6b657011 71px 73px,transparent 74px 144px),repeating-linear-gradient(-45deg,transparent 0 70px,#6b657011 71px 73px,transparent 74px 144px)}
+.cover-stack{width:min(100%,330px);height:auto;aspect-ratio:1;max-height:none;justify-self:center;transform-origin:50% 55%}
+.cover-stack.has-art.art-ready{animation:cover-sway 12s ease-in-out infinite}
+.cover-stack .stack-front,.cover-stack .stack-back{transition:opacity .3s ease}
+.cover-stack.has-art .stack-front,.cover-stack.has-art .stack-back{opacity:0}
+.cover-stack.art-ready .stack-front{opacity:1}
+.cover-stack.art-ready .stack-back{opacity:.3}
+.cover-fallback{position:absolute;inset:3% 0;height:94%;border-radius:12px;background:linear-gradient(145deg,#18151e,#09090d);display:grid;place-items:center;color:#686174;transition:opacity .3s}
+.cover-fallback .ui-icon{width:44px;height:44px;opacity:.4}
+.art-ready .cover-fallback{opacity:0}
+.stack-outgoing{position:absolute;inset:3% 0;width:100%;height:94%;border-radius:12px;object-fit:cover;transform:rotate(3deg);pointer-events:none;opacity:1;transition:opacity .3s ease}
+.stack-outgoing.leaving{opacity:0}
+.stack-front{border-color:#ffffff14}
+.selected-information h2{color:var(--song-color,#6b537d)}
+.song-card.selected{border-color:var(--song-color,#6b537d);box-shadow:0 0 0 2px color-mix(in srgb,var(--song-color,#6b537d) 40%,transparent)}
+.song-card .song-art>img{transition:transform .25s ease}
+@media(hover:hover){.song-card:hover .song-art>img{transform:scale(1.025)}}
+.selection-enter .selected-scores{animation:selection-arrive .23s ease both}
+.selection-enter .selected-information>h1{animation:selection-arrive .23s ease both}
+.selection-enter .selected-information>h2,.selection-enter .selected-information>p{animation:selection-arrive .26s ease both}
+.selection-enter .selected-stats,.selection-enter .selector-audio,.selection-enter .selector-play-row,.selection-enter .selector-mods{animation:selection-arrive .28s ease both}
+@keyframes selection-arrive{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cover-sway{0%,100%{transform:perspective(900px) rotate(-5deg) rotateY(-3deg) translateY(0)}50%{transform:perspective(900px) rotate(-1deg) rotateY(3deg) translateY(-5px)}}
+body.playing .cover-stack,body.settings-open .cover-stack{animation-play-state:paused}
+body.selector-open .topbar{background:#0b0b0bee;border-color:#242424}
+body.selector-open .library-toolbar input[type=search]{background:#222;color:#ddd}
+@media(max-width:900px){.cover-stack{width:min(100%,240px)}}
+@media(prefers-reduced-motion:reduce){.cover-stack.has-art.art-ready,.selection-enter .selected-scores,.selection-enter .selected-information>*{animation:none}.selector-atmosphere,.cover-stack .stack-front,.cover-stack .stack-back,.stack-outgoing,.cover-fallback,.song-card .song-art>img{transition:none}}
