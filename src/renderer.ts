@@ -67,7 +67,7 @@ export class Renderer {
       const cycle=approachTime(s)*1000;for(let i=0;i<15;i++){const pos=((time+i*247)%Math.max(1000,cycle*4))/Math.max(1000,cycle*4);const depth=s.spawnDistance*(1-pos);const visual=noteVisual(0,depth/s.approachRate*1000,s,1,false,this.visual);this.instance(count++,Math.sin(i*2.3),Math.cos(i*2.3),-depth,preview?visual.opacity:0.18,i%s.colors.length,0)}
     }
     this.mesh.count=count;if(count){this.mesh.instanceMatrix.clearUpdateRanges();this.mesh.instanceMatrix.addUpdateRange(0,count*16);this.mesh.instanceMatrix.needsUpdate=true;this.opacity.clearUpdateRanges();this.opacity.addUpdateRange(0,count);this.opacity.needsUpdate=true;if(this.mesh.instanceColor){this.mesh.instanceColor.clearUpdateRanges();this.mesh.instanceColor.addUpdateRange(0,count*3);this.mesh.instanceColor.needsUpdate=true}}
-    this.gl.render(this.scene,this.camera);this.frames++;const now=performance.now();if(attempt&&this.lastFrameAt&&this.qualityMode==='auto'&&this.adaptive.sample(now-this.lastFrameAt))this.resize(this.renderScale);this.lastFrameAt=now;if(now-this.lastFPS>=500){this.fps=Math.round(this.frames*1000/(now-this.lastFPS));this.frames=0;this.lastFPS=now}
+    this.gl.render(this.scene,this.camera);this.frames++;const now=performance.now();if(attempt&&!preview&&this.lastFrameAt&&this.qualityMode==='auto'&&this.adaptive.sample(now-this.lastFrameAt))this.resize(this.renderScale);this.lastFrameAt=now;if(now-this.lastFPS>=500){this.fps=Math.round(this.frames*1000/(now-this.lastFPS));this.frames=0;this.lastFPS=now}
   }
   private instance(index:number,x:number,y:number,z:number,opacity:number,color:number,rotation:number){
     writeNoteMatrix(this.mesh.instanceMatrix.array as Float32Array,index,x,y,z,rotation);
