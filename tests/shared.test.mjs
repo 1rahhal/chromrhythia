@@ -30,9 +30,9 @@ test('cover thumbnails require auth and an existing map, then are shared without
 });
 
 test('deployments revalidate mutable asset URLs and cache fingerprinted files safely',async()=>{
- const assets=Object.fromEntries(['style.css','index.html','source.zip','sw.js','style.123abc.css','game.123abc.bin'].map(path=>[path,{type:'text/plain',base64:btoa('fixture'),etag:'"test"'}]));const site=worker(assets);
+ const assets=Object.fromEntries(['style.css','index.html','source.zip','sw.js','style.123abc.css','game.123abc.bin','unlock.123abc.json'].map(path=>[path,{type:'text/plain',base64:btoa('fixture'),etag:'"test"'}]));const site=worker(assets);
  for(const path of ['style.css','index.html','source.zip','sw.js']){const r=await site.fetch(request('/'+path),{},{});assert.equal(r.headers.get('cache-control'),'no-cache')}
- for(const path of ['style.123abc.css','game.123abc.bin']){const r=await site.fetch(request('/'+path),{},{});assert.match(r.headers.get('cache-control'),/immutable/)}
+ for(const path of ['style.123abc.css','game.123abc.bin','unlock.123abc.json']){const r=await site.fetch(request('/'+path),{},{});assert.match(r.headers.get('cache-control'),/immutable/)}
 });
 
 const publisher='a'.repeat(64),otherPublisher='b'.repeat(64),presetId='11111111-1111-4111-8111-111111111111';

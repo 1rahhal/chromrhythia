@@ -44,14 +44,16 @@ export class SelectorArtwork {
   dispose(){this.disposed=true;this.generation++}
   async select(url:string,stack?:HTMLElement){
     const generation=++this.generation;
-    let outgoing:HTMLImageElement|undefined;
+    let outgoing:HTMLElement|undefined;
     if(stack&&this.visibleURL&&this.visibleURL!==url){
-      outgoing=stack.ownerDocument.createElement('img');outgoing.src=this.visibleURL;outgoing.alt='';outgoing.className='stack-outgoing';stack.append(outgoing);
+      outgoing=stack.ownerDocument.createElement('div');outgoing.className='stack-outgoing';
+      outgoing.style.cssText='position:absolute;inset:3% 0;width:100%;height:94%;background-size:cover;background-position:center;border-radius:12px;pointer-events:none;transition:opacity .3s ease';
+      outgoing.style.backgroundImage=`url("${this.visibleURL}")`;stack.append(outgoing);
     }
     try{
       const appearance=url?await this.load(url):undefined;
       if(this.disposed||generation!==this.generation)return;
-      stack?.classList.add('art-ready');outgoing?.classList.add('leaving');
+      stack?.classList.add('art-ready');if(outgoing){outgoing.classList.add('leaving');outgoing.style.opacity='0'}
       if(url!==this.visibleURL){
         const next=1-this.active,layer=this.layers[next];
         layer.style.backgroundImage=appearance?`radial-gradient(ellipse at 15% 25%,color-mix(in srgb,${appearance.tint} 26%,transparent),transparent 75%),linear-gradient(0deg,#0009,#0008),url("${appearance.background}")`:'';
