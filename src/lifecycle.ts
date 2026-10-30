@@ -1,4 +1,6 @@
 // Every selection invalidates previous asynchronous play/preview work.
+export const jumpLeadIn=(target:number,speed:number,approachSeconds:number)=>({time:target-approachSeconds*1000*speed,delayMs:1000});
+export const songClock=(origin:number,clockOrigin:number,now:number,speed:number)=>origin+Math.max(0,now-clockOrigin)*1000*speed;
 export class LatestRequest {
   private generation=0;
   begin(){return ++this.generation}

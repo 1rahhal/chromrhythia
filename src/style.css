@@ -454,3 +454,4 @@ body:not(.compact-play) .match-title{top:18.6%}
 .game-media.preview-media{position:absolute;inset:0;display:block;z-index:0}
 .native-pause{overflow:visible}
 #hud .match-stat small,#hud .match-stat b,#hud .match-combo>b,#hud .match-combo>small,.settings-preview-hud .match-stat small,.settings-preview-hud .match-stat b,.settings-preview-hud .match-combo>b,.settings-preview-hud .match-combo>small{font-family:RenythiaUI,Arial,sans-serif;font-weight:900}
+.game-leadin{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);font:900 52px/1 RenythiaUI,Arial,sans-serif;color:#eee;text-shadow:0 2px 16px #000;pointer-events:none}

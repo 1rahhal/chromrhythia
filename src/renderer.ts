@@ -38,7 +38,7 @@ export class Renderer {
   begin(){this.effects.reset();this.cursor.reset();this.resetFrameClock();this.adaptive.reset()}
   resize(scale=1,mode=this.qualityMode){this.renderScale=scale;this.qualityMode=mode;const ratio=renderRatio(innerWidth,innerHeight,devicePixelRatio,scale,mode,this.adaptive.factor);if(this.w===innerWidth&&this.h===innerHeight&&this.gl.getPixelRatio()===ratio)return;this.w=innerWidth;this.h=innerHeight;this.compact=gameViewport(this.w,this.h,this.camera.fov).compact;document.body.classList.toggle('compact-play',this.compact);this.gl.setPixelRatio(ratio);this.gl.setSize(this.w,this.h,false);this.camera.aspect=this.w/this.h;this.camera.updateProjectionMatrix()}
   warm(settings:Settings){return this.warmup??=this.ready.then(async()=>{this.mesh.count=0;await this.gl.compileAsync(this.scene,this.camera);this.render(0,settings);})}
-  render(time:number,s:Settings,attempt?:Attempt,cursor={x:0,y:0},preview=false,spin={x:0,y:0}){
+  render(time:number,s:Settings,attempt?:Attempt,cursor={x:0,y:0},preview=false,spin={x:0,y:0},hideNotes=false){
     if(s.resolutionMode!==this.qualityMode||s.renderScale!==this.renderScale)this.resize(s.renderScale,s.resolutionMode);
     this.noteScale=s.noteScale;this.noteOpacity=s.noteOpacity/100;if(this.noteShape!==s.noteSkin){if(!this.noteGeometries.has('native'))this.noteGeometries.set('native',this.mesh.geometry);let geometry=this.noteGeometries.get(s.noteSkin);if(!geometry){geometry=noteSkinGeometry(s.noteSkin);geometry.setAttribute('instanceOpacity',this.opacity);this.noteGeometries.set(s.noteSkin,geometry)}this.mesh.geometry=geometry;this.noteShape=s.noteSkin}this.effects.update(performance.now());
     this.palette.sync(s.colors);
@@ -48,13 +48,14 @@ export class Renderer {
     if(this.backgroundName!==s.background){this.backgroundName=s.background;this.environment.visible=s.background==='grid';this.tunnel.visible=s.background==='tunnel';this.aurora.visible=s.background==='aurora';this.gl.setClearColor(s.background==='grid'?0x0c081c:0x000000,s.background==='media'?0:1)}
     if(this.tunnel.visible)this.tunnel.position.z=(time/1000*s.approachRate/2)%52.5;this.auroraMaterial.uniforms.time.value=time/1000;
     let count=0;const notes=attempt?.chart.notes;const speed=attempt?.speed??1;const at=approachTime(s)*1000*speed;
-    if(attempt&&notes){
+    if(hideNotes){this.effects.reset()}
+    else if(attempt&&notes){
       const mods=attempt.mods,ghost=mods.includes('Ghost'),hflip=mods.includes('HFlip'),vflip=mods.includes('VFlip'),strobe=mods.includes('Strobe')&&time/1000/speed%approachTime(s)>=approachTime(s)/2,earthquake=mods.includes('Earthquake'),chaos=mods.includes('Chaos'),vortex=mods.includes('Vortex');
       const sine=vortex?Math.sin(time/speed/1000*approachTime(s)):0,vortexSpin=vortex?Math.sign(sine)*Math.abs(sine)**0.75:0;
       // Only walk the visible time interval, not the entire chart.
       let lo=0,hi=notes.length;while(lo<hi){const m=(lo+hi)>>>1;if(notes[m].time<time-55*speed)lo=m+1;else hi=m}
       for(let i=lo;i<notes.length&&count<this.capacity;i++){
-        const n=notes[i];if(n.time>time+at)break;if(attempt.judged[i]===1)continue;
+        const n=notes[i];if(n.time>time+at)break;if(attempt.judged[i]===1||attempt.judged[i]===3)continue;
         const visual=noteVisual(time,n.time,s,speed,ghost,this.visual);let {depth,opacity}=visual;let x=n.x*(hflip?-1:1),y=n.y*(vflip?-1:1),rotation=0;
         const d=Math.max(0,depth)/s.spawnDistance;
         if(strobe||opacity<=0)continue;
