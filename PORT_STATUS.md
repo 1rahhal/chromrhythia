@@ -58,6 +58,10 @@ The selector follows the supplied native-client visual references with grid/list
 ### Replay and HUD update
 Local score/replay writes are atomic. Web replay v2 preserves attempt endpoints, unjudged notes, practice starts, camera mode/rotations and timed settings changes; v1 imports remain supported. Native PHXR replay conversion is still not implemented. The match HUD now follows the supplied website replay viewer, substituting the current accuracy grade for RP. No gameplay defaults changed.
 
+### Reference-style settings, audio and skins
+
+The screenshot-driven settings panel now includes distinct Nunito font weights, left-side category navigation, sound galleries with per-event toggles/volumes and imported shared audio, Alt-held Music/Sounds/Master rings, note shapes, pooled hit effects, border shapes, media layers and a HUD editor. Built-in hit choices are pitched variants of the original bundled hit sample, not original community sound packs. Shared assets use authenticated R2 routes with file-type/size checks; local settings and score/replay ownership are unchanged. The settings preview is a lightweight generated animation, not a playback of the selected map. Native plugin features, ranked data and RP are not fabricated.
+
 ### Engine optimization
 The original note mesh had 678 non-indexed vertices. Position-only indexing keeps all 226 triangle positions and their order while reducing unique vertices to 113. Note colors are cached in linear color space; instance transforms write directly to the existing dynamic buffers. Modifier constants are computed once per frame, zero-opacity notes skip drawing, cursor trail uploads use partial ranges, and tunnel rings share two textures/materials and one geometry. Replay interpolation reuses outputs and advances a settings cursor; HUD nodes are cached and unchanged SVG/ARIA attributes are not rewritten. Resume resets the FPS measurement clock, avoiding a misleading low reading that includes pause duration.
 

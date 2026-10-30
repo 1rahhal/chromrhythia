@@ -1,6 +1,6 @@
 import type {Chart} from './model';
 declare global{interface Window{__CHROMRHYTHIA_AUTH__?:string}}
-const token=window.__CHROMRHYTHIA_AUTH__||'';delete window.__CHROMRHYTHIA_AUTH__;
+const token=typeof window==='undefined'?'':window.__CHROMRHYTHIA_AUTH__||'';if(typeof window!=='undefined')delete window.__CHROMRHYTHIA_AUTH__;
 const headers=()=>({Authorization:`Bearer ${token}`});
 const pack=(m:unknown)=>{const a=new TextEncoder().encode(JSON.stringify(m));let s='';for(const c of a)s+=String.fromCharCode(c);return btoa(s)};
 export async function sharedMaps():Promise<Chart[]>{let cursor:string|undefined;const maps:Chart[]=[];do{const r=await fetch('api/maps'+(cursor?'?cursor='+encodeURIComponent(cursor):''),{headers:headers(),signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error('Shared library unavailable; showing downloaded maps.');const data=await r.json();maps.push(...data.maps);cursor=data.cursor;if(maps.length>10000)break}while(cursor);return maps}
@@ -29,6 +29,11 @@ export async function uploadCover(chart:Chart){
 }
 
 export async function communityPresets(cursor?:string){const r=await fetch('api/presets'+(cursor?'?cursor='+encodeURIComponent(cursor):''),{headers:headers(),signal:AbortSignal.timeout(10000)});const data=await r.json();if(!r.ok)throw Error(data.error||'Could not load shared presets');return data as {presets:import('./presets').Preset[];cursor:string|null}}
+export interface SharedAsset{id:string;name:string;type:string;size:number}
+export async function sharedAssets(){const assets:SharedAsset[]=[];let cursor:string|undefined;do{const r=await fetch('api/assets'+(cursor?'?cursor='+encodeURIComponent(cursor):''),{headers:headers(),signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Shared assets are unavailable');const data=await r.json();assets.push(...data.assets);cursor=data.cursor}while(cursor&&assets.length<1000);return assets}
+export async function uploadAsset(file:File){const types:Record<string,string>={mp3:'audio/mpeg',wav:'audio/wav',ogg:'audio/ogg',m4a:'audio/mp4',flac:'audio/flac',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',webm:'video/webm'};const type=types[file.name.split('.').pop()!.toLowerCase()]||file.type;const limit=type.startsWith('audio/')?8:32;if(!file.size||file.size>limit*1048576)throw Error(`Use a file under ${limit} MB`);const bytes=await file.arrayBuffer(),hash=await crypto.subtle.digest('SHA-256',bytes),id=Array.from(new Uint8Array(hash),n=>n.toString(16).padStart(2,'0')).join('');const r=await fetch('api/assets/'+id,{method:'PUT',headers:{...headers(),'content-type':type,'x-asset-name':encodeURIComponent(file.name)},body:bytes});const data=await r.json();if(!r.ok)throw Error(data.error||'Import failed');return data.asset as SharedAsset}
+const assetURLs=new Map<string,Promise<string>>();
+export function sharedAssetURL(id:string){let pending=assetURLs.get(id);if(!pending){pending=(async()=>{const cache=await caches.open('renythia-shared-assets-v1').catch(()=>undefined),path=new URL('api/assets/'+id,location.href).href;let response=await cache?.match(path);if(!response){response=await fetch(path,{headers:headers(),signal:AbortSignal.timeout(20000)});if(!response.ok)throw Error('Could not load the imported asset');await cache?.put(path,response.clone()).catch(()=>{})}return URL.createObjectURL(await response.blob())})().catch(error=>{assetURLs.delete(id);throw error});assetURLs.set(id,pending)}return pending}
 export async function publishPreset(preset:import('./presets').LocalPreset,author:string){
   try{
     const r=await fetch('api/presets'+(preset.publicId?'/'+preset.publicId:''),{method:preset.publicId?'PUT':'POST',headers:{...headers(),'Content-Type':'application/json','X-Preset-Key':preset.publisherKey!},body:JSON.stringify({id:preset.id,name:preset.name,author,settings:preset.settings}),signal:AbortSignal.timeout(20000)});

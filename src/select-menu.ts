@@ -1,0 +1,12 @@
+export function enhanceSelects(root:HTMLElement){
+ for(const select of root.querySelectorAll<HTMLSelectElement>('select:not([hidden])')){
+  if(select.dataset.enhanced==='true')continue;select.dataset.enhanced='true';select.style.display='none';
+  const button=document.createElement('button');button.type='button';button.className='select-display';button.dataset.select=select.id;button.textContent=select.selectedOptions[0]?.textContent||'';button.setAttribute('aria-haspopup','listbox');button.setAttribute('aria-expanded','false');button.setAttribute('aria-label',select.getAttribute('aria-label')||select.closest('label')?.childNodes[0]?.textContent?.trim()||'Choose option');select.after(button);
+  button.onclick=()=>{
+   const overlay=document.createElement('div');overlay.className='select-overlay';const menu=document.createElement('div');menu.className='select-popover';menu.setAttribute('role','listbox');
+   const options=Array.from(select.options);options.forEach((option,index)=>{const item=document.createElement('button');item.type='button';item.textContent=option.textContent;item.disabled=option.disabled;item.setAttribute('role','option');item.setAttribute('aria-selected',String(option.selected));item.onclick=()=>{select.selectedIndex=index;button.textContent=option.textContent;select.dispatchEvent(new Event('change',{bubbles:true}));close()};menu.append(item)});
+   const close=()=>{overlay.remove();button.setAttribute('aria-expanded','false');if(button.isConnected)button.focus()};overlay.append(menu);document.body.append(overlay);button.setAttribute('aria-expanded','true');const rect=button.getBoundingClientRect(),width=Math.max(260,Math.min(400,rect.width));menu.style.width=width+'px';menu.style.left=Math.max(8,Math.min(innerWidth-width-8,rect.left))+'px';menu.style.top=Math.max(8,Math.min(innerHeight-menu.getBoundingClientRect().height-8,rect.bottom+7))+'px';
+   overlay.onclick=event=>{if(event.target===overlay)close()};overlay.onkeydown=event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close()}if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();event.stopPropagation();const items=Array.from(menu.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')),index=items.indexOf(document.activeElement as HTMLButtonElement);items[(index+(event.key==='ArrowDown'?1:items.length-1))%items.length]?.focus()}};menu.querySelector<HTMLButtonElement>('[aria-selected=true]')?.focus();
+  };
+ }
+}

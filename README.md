@@ -31,6 +31,12 @@ The pitch-black selector uses purple/blue accents, inline SVG icons, embedded SS
 
 Choose Grid, Tunnel, Aurora or Pitch black in Settings. The grid uses the original rewrite texture with a corrected color space and extended floor/ceiling to avoid the old hard edge. The browser renderer skips the full 3D scene in menus, warms shaders before play, updates only visible instance data and batches dynamic HUD text through a reusable font atlas. Automatic rendering caps 3D pixel work at 1600×900 or less and reduces resolution gradually if frames remain slow. Menus stay at native resolution. Fixed resolution remains available in Settings. Gameplay animation still follows the display refresh rate, and its FPS counter is visible during play.
 
+## Reference-style customization
+
+Settings opens as a left panel with separate header and scrolling content, real Nunito weights, category icons, animated navigation and a live preview. Audio has separate hit, miss, fail and retry toggles, sample selection and volumes, plus independent Music, Sounds and Master levels. Hold **Alt** to open the three volume rings; hover a ring and scroll to adjust it. The six built-in hit options are pitched variants of the bundled native hit sample; they are not the six original community recordings. Import your own audio to use the exact sample you prefer. Imported audio and media are shared with other visitors who have the game password.
+
+Notes, hit effects and borders have searchable galleries. Interface opens a HUD editor with draggable and resizable items, keyboard movement, Add, Reset and Done. Media supports up to four shared image/video layers; videos are muted and pause with the game. Sort & Filter supports local score grades and mapper/difficulty/recently played grouping. Settings and applied public presets remain independent for each browser; scores and replays remain local.
+
 ## Cloud hosting and GitHub Pages
 
 The primary deployment is a cloud Worker with a managed R2 bucket, using `.openai/hosting.json`. `npm run build` creates the encrypted offline-capable client and the ESM Worker at `dist/server/index.js`. Configure `PASSWORD_HASH` as a hosted secret containing the SHA-256 of the chosen password; the plaintext password is not deployed. The source is on GitHub. See [SHARED_HOSTING.md](SHARED_HOSTING.md).

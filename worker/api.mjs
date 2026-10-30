@@ -1,5 +1,6 @@
 import {recoverCover,imageType} from './artwork.mjs';
 import {presetsAPI} from './presets.mjs';
+import {assetsAPI} from './assets.mjs';
 const MAX_MAP_SIZE=64*1024*1024;
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 function equal(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==64||b.length!==64)return false;let result=0;for(let i=0;i<64;i++)result|=a.charCodeAt(i)^b.charCodeAt(i);return result===0}
@@ -14,6 +15,7 @@ export async function api(request,env){
   if(!env.BUCKET)return json({error:'Shared storage is not configured.'},503);
   try{
     if(path==='/api/presets'||path.startsWith('/api/presets/'))return await presetsAPI(request,env.BUCKET);
+    if(path==='/api/assets'||path.startsWith('/api/assets/'))return await assetsAPI(request,env.BUCKET);
     if(path==='/api/maps'&&request.method==='GET'){
       const cursor=url.searchParams.get('cursor')||undefined;if(cursor&&cursor.length>2048)return json({error:'Invalid cursor'},400);
       const list=await env.BUCKET.list({prefix:'maps/',limit:100,include:['customMetadata'],cursor});

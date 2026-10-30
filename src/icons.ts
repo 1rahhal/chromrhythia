@@ -17,4 +17,5 @@ Object.assign(paths,{
   undo:'<path d="M3 8h11a6 6 0 0 1 0 12h-3M3 8l5-5M3 8l5 5"/>',
   more:'<circle cx="4" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="20" cy="12" r="1"/>'
 });
+Object.assign(paths,{headphones:'<path d="M4 16v-5a8 8 0 0 1 16 0v5M4 12H2v8h5v-8zm16 0h2v8h-5v-8z"/>',music:'<path d="M9 17V4l12-2v13M9 6l12-2"/><ellipse cx="5" cy="18" rx="4" ry="3"/><ellipse cx="17" cy="16" rx="4" ry="3"/>',keyboard:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M5 9h1m3 0h1m3 0h1m3 0h1M5 12h1m3 0h1m3 0h1m3 0h1M6 16h12"/>',film:'<path d="M3 7h18v14H3zM3 7 1 2l19-2 1 5M5 2l3 4m3-5 3 4m3-5 3 4"/>',note:'<rect x="4" y="4" width="16" height="16" rx="3" transform="rotate(-12 12 12)"/>',border:'<path d="M8 3H3v5m13-5h5v5M3 16v5h5m8 0h5v-5"/>',sparkles:'<path d="m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3zM20 2v5m-2-2h5"/>'});
 export const icon=(name:string)=>`<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.bolt}</svg>`;
